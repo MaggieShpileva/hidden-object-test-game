@@ -1,0 +1,5 @@
+# Проверка типов TypeScript
+npx tsc -b --noEmit || exit 1
+
+# Проверка линтинга и форматирования через lint-staged
+npx lint-staged

@@ -1,13 +1,22 @@
 @use '@styles/index.scss' as *;
 
 .banner {
-  padding: $spacing-2xl $spacing-lg;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: $spacing-xl;
+  margin: 0 auto;
+  height: 100dvh;
+  position: relative;
+  background: url('@assets/scene.png') no-repeat center center;
+  aspect-ratio: 1103/768;
+  background-size: contain;
+  overflow: hidden;
 }
 
-.bannerTitle {
-  text-align: center;
+.image {
+  min-width: 50px;
+  max-width: 150px;
+  position: absolute;
+  aspect-ratio: 1/1;
+  cursor: pointer;
+  object-fit: contain;
+  transform-origin: center center;
+  user-select: none;
 }

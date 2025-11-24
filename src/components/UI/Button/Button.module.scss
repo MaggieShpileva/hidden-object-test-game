@@ -32,3 +32,8 @@
 .fullWidth {
   width: 100%;
 }
+
+.buttonPrimary {
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-size-xl;
+}

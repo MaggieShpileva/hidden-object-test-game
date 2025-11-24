@@ -1,0 +1,90 @@
+@use '@styles/index.scss' as *;
+
+.overlay {
+  padding: $spacing-md;
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  inset: 0;
+}
+
+.content {
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background-color: $bg-primary;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+
+  &::before {
+    height: 4px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    background: linear-gradient(90deg, $primary-color, $info-color);
+    content: '';
+  }
+}
+
+.winner {
+  &::before {
+    background: linear-gradient(90deg, $success-color, #34d399);
+  }
+}
+
+.loser {
+  &::before {
+    background: linear-gradient(90deg, $error-color, #f87171);
+  }
+}
+
+.start {
+  &::before {
+    background: linear-gradient(90deg, $primary-color, $info-color);
+  }
+}
+
+.gameComplete {
+  &::before {
+    background: linear-gradient(90deg, $success-color, #fbbf24);
+  }
+}
+
+.header {
+  padding: $spacing-lg $spacing-lg $spacing-md;
+  text-align: center;
+  border-bottom: 1px solid $white-030;
+}
+
+.title {
+  margin: 0;
+  color: $text-primary;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.body {
+  padding: $spacing-lg;
+  text-align: center;
+}
+
+.message {
+  margin: 0 0 $spacing-md;
+  color: $text-secondary;
+  font-size: $font-size-base;
+  line-height: 1.6;
+}
+
+.footer {
+  padding: $spacing-md $spacing-lg $spacing-lg;
+  border-top: 1px solid $white-030;
+}
