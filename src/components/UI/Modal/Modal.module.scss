@@ -22,40 +22,6 @@
   background-color: $bg-primary;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   overflow: hidden;
-
-  &::before {
-    height: 4px;
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    background: linear-gradient(90deg, $primary-color, $info-color);
-    content: '';
-  }
-}
-
-.winner {
-  &::before {
-    background: linear-gradient(90deg, $success-color, #34d399);
-  }
-}
-
-.loser {
-  &::before {
-    background: linear-gradient(90deg, $error-color, #f87171);
-  }
-}
-
-.start {
-  &::before {
-    background: linear-gradient(90deg, $primary-color, $info-color);
-  }
-}
-
-.gameComplete {
-  &::before {
-    background: linear-gradient(90deg, $success-color, #fbbf24);
-  }
 }
 
 .header {

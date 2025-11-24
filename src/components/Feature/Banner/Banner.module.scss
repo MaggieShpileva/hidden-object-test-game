@@ -1,22 +1,30 @@
 @use '@styles/index.scss' as *;
 
 .banner {
-  margin: 0 auto;
   height: 100dvh;
   position: relative;
-  background: url('@assets/scene.png') no-repeat center center;
-  aspect-ratio: 1103/768;
-  background-size: contain;
+  background: url('@assets/scene.png') no-repeat;
+  aspect-ratio: 1200 / 540;
+  background-size: cover;
+  cursor: grab;
   overflow: hidden;
+  pointer-events: none;
+  user-select: none;
 }
 
 .image {
-  min-width: 50px;
-  max-width: 150px;
   position: absolute;
-  aspect-ratio: 1/1;
-  cursor: pointer;
-  object-fit: contain;
+  transition: filter 0.3s ease-in-out;
+  cursor: grab;
+  pointer-events: auto;
   transform-origin: center center;
-  user-select: none;
+
+  &:hover {
+    filter: drop-shadow(0 0 4px rgb(255, 255, 255)) drop-shadow(0 0 4px rgb(255, 72, 0))
+      drop-shadow(0 0 4px rgb(255, 72, 0));
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
 }

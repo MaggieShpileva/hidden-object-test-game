@@ -9,22 +9,11 @@ import { Title } from '../Title';
 
 type ModalProps = {
   isOpen: boolean;
-  isWinner?: boolean;
   onClose: () => void;
   children?: ReactNode;
-  targetObjectName?: string;
-  isGameComplete?: boolean;
 };
 
-export const Modal: FC<ModalProps> = ({
-  isOpen,
-  isWinner,
-  onClose,
-  children,
-  targetObjectName,
-  isGameComplete,
-}) => {
-  const isStartModal = targetObjectName !== undefined && isWinner === undefined && !isGameComplete;
+export const Modal: FC<ModalProps> = ({ isOpen, onClose, children }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -97,42 +86,19 @@ export const Modal: FC<ModalProps> = ({
 
   return (
     <div className={styles.overlay} ref={overlayRef} onClick={handleClose}>
-      <div
-        className={clsx(styles.content, {
-          [styles.winner]: isWinner === true,
-          [styles.loser]: isWinner === false,
-          [styles.start]: isStartModal,
-          [styles.gameComplete]: isGameComplete,
-        })}
-        ref={contentRef}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className={clsx(styles.content)} ref={contentRef} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <Title tag="h2" variant="medium" className={styles.title}>
-            {isGameComplete
-              ? '🏆 Поздравляем!'
-              : isStartModal
-                ? '🔍 Найдите предмет'
-                : isWinner
-                  ? '🎉 Поздравляем!'
-                  : '😔 Попробуйте еще раз'}
+            🏆 Поздравляем!
           </Title>
         </div>
         <div className={styles.body}>
-          <Typography className={styles.message}>
-            {isGameComplete
-              ? 'Вы прошли игру! Все предметы найдены! Отличная работа!'
-              : isStartModal
-                ? `Найдите предмет: "${targetObjectName}"`
-                : isWinner
-                  ? 'Вы нашли правильный предмет! Отличная работа!'
-                  : 'К сожалению, это не тот предмет. Попробуйте найти правильный!'}
-          </Typography>
+          <Typography className={styles.message}>Вы нашли предмет скрытый предмет</Typography>
           {children}
         </div>
         <div className={styles.footer}>
           <Button variant="primary" onClick={handleClose} fullWidth>
-            {isGameComplete ? 'Начать заново' : isStartModal ? 'Начать игру' : 'Закрыть'}
+            Продолжить
           </Button>
         </div>
       </div>

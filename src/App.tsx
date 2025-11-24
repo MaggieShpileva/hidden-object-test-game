@@ -3,7 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
 import { Error } from './pages/Error';
-import { Layout } from './components/Feature';
+import { Game, Layout } from './components/Feature';
 
 const router = createBrowserRouter([
   {
@@ -15,7 +15,10 @@ const router = createBrowserRouter([
         index: true,
         element: <Home />,
       },
-
+      {
+        path: '/game',
+        element: <Game />,
+      },
       {
         path: '*',
         element: <NotFound />,

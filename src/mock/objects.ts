@@ -1,105 +1,88 @@
-import PNG_image1 from '@assets/objects/image-1.png';
-import PNG_image2 from '@assets/objects/image-2.png';
-import PNG_image3 from '@assets/objects/image-3.png';
-import PNG_image4 from '@assets/objects/image-4.png';
-import PNG_image5 from '@assets/objects/image-5.png';
-import PNG_image6 from '@assets/objects/image-6.png';
-import PNG_image7 from '@assets/objects/image-7.png';
-import PNG_image8 from '@assets/objects/image-8.png';
-import PNG_image9 from '@assets/objects/image-9.png';
-import PNG_image10 from '@assets/objects/image-10.png';
+//scene width: 1200px, height: 540px;
+import PNG_image1 from '@assets/objects/girl.png';
+import PNG_image2 from '@assets/objects/wood_log.png';
+import PNG_image3 from '@assets/objects/box.png';
+import PNG_image4 from '@assets/objects/castle.png';
+import PNG_image5 from '@assets/objects/pot.png';
 
 export type Object = {
   id: number;
   name: string;
   image: string;
-  half: 'top' | 'bottom';
-  width: number;
+  position: {
+    x: number;
+    y: number;
+  };
+  size: {
+    width: number;
+    height: number;
+  };
 };
 
 export const OBJECTS: Object[] = [
   {
     id: 1,
-    name: 'Кот',
+    name: 'girl',
     image: PNG_image1,
-    half: 'bottom',
-    width: 10,
+    position: {
+      x: 210,
+      y: 250,
+    },
+    size: {
+      width: 80,
+      height: 80,
+    },
   },
   {
     id: 2,
-    name: 'Звезда',
+    name: 'wood_log',
     image: PNG_image2,
-    half: 'top',
-    width: 4,
+    position: {
+      x: 300,
+      y: 380,
+    },
+    size: {
+      width: 120,
+      height: 50,
+    },
   },
   {
     id: 3,
-    name: 'Печенье',
+    name: 'box',
     image: PNG_image3,
-    half: 'bottom',
-    width: 6,
+    position: {
+      x: 680,
+      y: 370,
+    },
+    size: {
+      width: 70,
+      height: 40,
+    },
   },
   {
     id: 4,
-    name: 'Дерево',
+    name: 'castle',
     image: PNG_image4,
-    half: 'bottom',
-    width: 7,
+    position: {
+      x: 980,
+      y: 100,
+    },
+    size: {
+      width: 70,
+      height: 40,
+    },
   },
   {
     id: 5,
-    name: 'Роберт Паттинсон',
+    name: 'pot',
     image: PNG_image5,
-    half: 'top',
-    width: 6,
-  },
-  {
-    id: 6,
-    name: 'Птичка',
-    image: PNG_image6,
-    half: 'bottom',
-    width: 5,
-  },
-  {
-    id: 7,
-    name: 'Телефон',
-    image: PNG_image7,
-    half: 'bottom',
-    width: 5,
-  },
-  {
-    id: 8,
-    name: 'Кристалл',
-    image: PNG_image8,
-    half: 'bottom',
-    width: 5,
-  },
-  {
-    id: 9,
-    name: 'Попугай',
-    image: PNG_image9,
-    half: 'top',
-    width: 8,
-  },
-  {
-    id: 10,
-    name: 'Гриб',
-    image: PNG_image10,
-    half: 'bottom',
-    width: 7,
+    position: {
+      x: 1120,
+      y: 420,
+    },
+    size: {
+      width: 35,
+      height: 50,
+    },
   },
 ];
-
-export const getRandomObject = (): Object => {
-  const randomIndex = Math.floor(Math.random() * OBJECTS.length);
-  return OBJECTS[randomIndex];
-};
-
-export const getRandomObjectExcluding = (excludedIds: number[]): Object | null => {
-  const availableObjects = OBJECTS.filter((obj) => !excludedIds.includes(obj.id));
-  if (availableObjects.length === 0) {
-    return null;
-  }
-  const randomIndex = Math.floor(Math.random() * availableObjects.length);
-  return availableObjects[randomIndex];
-};
