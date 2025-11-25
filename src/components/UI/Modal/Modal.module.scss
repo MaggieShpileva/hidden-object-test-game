@@ -2,18 +2,19 @@
 
 .overlay {
   padding: $spacing-md;
+  width: 100dvw;
+  height: 100dvh;
   position: fixed;
   z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
   background-color: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   inset: 0;
+  place-items: center;
 }
 
 .content {
-  width: 100%;
+  width: calc(100% - 64px);
   max-width: 500px;
   position: relative;
   display: flex;
@@ -21,7 +22,6 @@
   border-radius: 16px;
   background-color: $bg-primary;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
 }
 
 .header {

@@ -3,25 +3,36 @@
 .banner {
   height: 100dvh;
   position: relative;
-  background: url('@assets/scene.png') no-repeat;
-  aspect-ratio: 1200 / 540;
-  background-size: cover;
   cursor: grab;
   overflow: hidden;
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: none;
   user-select: none;
+}
+
+.scene {
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: url('@assets/scene.jpg') no-repeat;
+  aspect-ratio: 1225 / 417;
+  background-size: cover;
+  will-change: transform;
 }
 
 .image {
   position: absolute;
   transition: filter 0.3s ease-in-out;
-  cursor: grab;
+  cursor: pointer;
   pointer-events: auto;
+  touch-action: none;
   transform-origin: center center;
+  -webkit-user-drag: none;
 
   &:hover {
-    filter: drop-shadow(0 0 4px rgb(255, 255, 255)) drop-shadow(0 0 4px rgb(255, 72, 0))
-      drop-shadow(0 0 4px rgb(255, 72, 0));
+    filter: drop-shadow(0 0 2px rgb(255, 255, 255)) drop-shadow(0 0 4px rgba(137, 175, 249, 0.755))
+      drop-shadow(0 0 5px rgba(223, 209, 253, 0.373));
   }
 
   &:active {
