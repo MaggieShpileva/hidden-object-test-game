@@ -1,0 +1,16 @@
+@use '@styles/index.scss' as *;
+
+.container {
+  position: relative;
+  display: inline-block;
+  transition: transform 0s;
+  will-change: transform;
+}
+
+.canvas {
+  width: 300px;
+  height: 250px;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
