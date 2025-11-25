@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FC } from 'react';
+import { gsap } from 'gsap';
 import styles from './Hero.module.scss';
 import IDLE_ANIMATE1 from '@assets/hero/idle/Idle-1.png';
 import IDLE_ANIMATE2 from '@assets/hero/idle/Idle-2.png';
@@ -62,9 +63,9 @@ const RUN_ANIMATE = [
   RUN_ANIMATE11,
 ];
 
-const FPS = 12; // Кадров в секунду для плавной анимации
+const FPS = 16; // Кадров в секунду для плавной анимации
 const FRAME_DELAY = 500 / FPS; // Задержка между кадрами в миллисекундах
-const MOVE_SPEED = 5; // Скорость перемещения в пикселях за кадр
+const MOVE_SPEED = 10; // Скорость перемещения в пикселях за кадр
 
 type AnimationType = 'idle' | 'run';
 type Direction = 'left' | 'right';
@@ -74,10 +75,9 @@ export const Hero: FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number>(0);
-  const moveAnimationFrameRef = useRef<number | null>(null);
   const [animationType, setAnimationType] = useState<AnimationType>('idle');
   const [direction, setDirection] = useState<Direction>('right');
-  const [positionX, setPositionX] = useState<number>(0);
+  const moveTweenRef = useRef<gsap.core.Tween | null>(null);
   const pressedKeysRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -255,47 +255,63 @@ export const Hero: FC = () => {
     };
 
     const startMovement = () => {
-      if (moveAnimationFrameRef.current !== null) return;
+      if (!containerRef.current || moveTweenRef.current) return;
 
-      const move = () => {
+      const updateMovement = () => {
         const hasRight = pressedKeysRef.current.has('ArrowRight');
         const hasLeft = pressedKeysRef.current.has('ArrowLeft');
 
-        if (hasRight || hasLeft) {
-          setPositionX((prevX) => {
-            if (!containerRef.current) return prevX;
-
-            const container = containerRef.current.parentElement;
-            if (!container) return prevX;
-
-            const containerRect = container.getBoundingClientRect();
-            const containerWidth = containerRect.width;
-            const canvasWidth = containerRef.current.offsetWidth || 300;
-            const maxX = Math.max(0, containerWidth - canvasWidth);
-
-            let newX = prevX;
-            if (hasRight) {
-              newX = Math.min(prevX + MOVE_SPEED, maxX);
-            } else if (hasLeft) {
-              newX = Math.max(prevX - MOVE_SPEED, 0);
-            }
-
-            return newX;
-          });
-
-          moveAnimationFrameRef.current = requestAnimationFrame(move);
-        } else {
+        if (!hasRight && !hasLeft) {
           stopMovement();
+          return;
         }
+
+        const container = containerRef.current?.parentElement;
+        if (!container || !containerRef.current) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const canvasWidth = containerRef.current.offsetWidth || 300;
+        const maxX = Math.max(0, containerWidth - canvasWidth);
+
+        const currentX = (gsap.getProperty(containerRef.current, 'x') as number) || 0;
+        let targetX = currentX;
+
+        if (hasRight) {
+          targetX = Math.min(currentX + MOVE_SPEED, maxX);
+        } else if (hasLeft) {
+          targetX = Math.max(currentX - MOVE_SPEED, 0);
+        }
+
+        // Используем GSAP для плавного перемещения без ре-рендеров
+        if (moveTweenRef.current) {
+          moveTweenRef.current.kill();
+        }
+
+        moveTweenRef.current = gsap.to(containerRef.current, {
+          x: targetX,
+          duration: 0.1,
+          ease: 'none',
+          onComplete: () => {
+            if (
+              pressedKeysRef.current.has('ArrowRight') ||
+              pressedKeysRef.current.has('ArrowLeft')
+            ) {
+              requestAnimationFrame(updateMovement);
+            } else {
+              moveTweenRef.current = null;
+            }
+          },
+        });
       };
 
-      moveAnimationFrameRef.current = requestAnimationFrame(move);
+      requestAnimationFrame(updateMovement);
     };
 
     const stopMovement = () => {
-      if (moveAnimationFrameRef.current !== null) {
-        cancelAnimationFrame(moveAnimationFrameRef.current);
-        moveAnimationFrameRef.current = null;
+      if (moveTweenRef.current) {
+        moveTweenRef.current.kill();
+        moveTweenRef.current = null;
       }
     };
 
@@ -310,11 +326,7 @@ export const Hero: FC = () => {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className={styles.container}
-      style={{ transform: `translateX(${positionX}px)` }}
-    >
+    <div ref={containerRef} className={styles.container}>
       <canvas ref={canvasRef} className={styles.canvas} width={300} height={200} />
     </div>
   );
