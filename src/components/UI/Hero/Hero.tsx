@@ -3,19 +3,13 @@ import type { FC } from 'react';
 import { gsap } from 'gsap';
 import styles from './Hero.module.scss';
 import IDLE_ANIMATE1 from '@assets/hero/idle/Idle-1.png';
-import IDLE_ANIMATE2 from '@assets/hero/idle/Idle-2.png';
 import IDLE_ANIMATE3 from '@assets/hero/idle/Idle-3.png';
 import IDLE_ANIMATE4 from '@assets/hero/idle/Idle-4.png';
-import IDLE_ANIMATE5 from '@assets/hero/idle/Idle-5.png';
 import IDLE_ANIMATE6 from '@assets/hero/idle/Idle-6.png';
-import IDLE_ANIMATE7 from '@assets/hero/idle/Idle-7.png';
 import IDLE_ANIMATE8 from '@assets/hero/idle/Idle-8.png';
 import IDLE_ANIMATE9 from '@assets/hero/idle/Idle-9.png';
-import IDLE_ANIMATE10 from '@assets/hero/idle/Idle-10.png';
 import IDLE_ANIMATE11 from '@assets/hero/idle/Idle-11.png';
-import IDLE_ANIMATE12 from '@assets/hero/idle/Idle-12.png';
 import IDLE_ANIMATE13 from '@assets/hero/idle/Idle-13.png';
-import IDLE_ANIMATE15 from '@assets/hero/idle/Idle-15.png';
 import IDLE_ANIMATE16 from '@assets/hero/idle/Idle-16.png';
 import IDLE_ANIMATE17 from '@assets/hero/idle/Idle-17.png';
 import RUN_ANIMATE1 from '@assets/hero/run/Run-1.png';
@@ -32,19 +26,13 @@ import RUN_ANIMATE11 from '@assets/hero/run/Run-11.png';
 
 const IDLE_ANIMATE = [
   IDLE_ANIMATE1,
-  IDLE_ANIMATE2,
   IDLE_ANIMATE3,
   IDLE_ANIMATE4,
-  IDLE_ANIMATE5,
   IDLE_ANIMATE6,
-  IDLE_ANIMATE7,
   IDLE_ANIMATE8,
   IDLE_ANIMATE9,
-  IDLE_ANIMATE10,
   IDLE_ANIMATE11,
-  IDLE_ANIMATE12,
   IDLE_ANIMATE13,
-  IDLE_ANIMATE15,
   IDLE_ANIMATE16,
   IDLE_ANIMATE17,
 ];
@@ -63,9 +51,9 @@ const RUN_ANIMATE = [
   RUN_ANIMATE11,
 ];
 
-const FPS = 16; // Кадров в секунду для плавной анимации
-const FRAME_DELAY = 500 / FPS; // Задержка между кадрами в миллисекундах
-const MOVE_SPEED = 10; // Скорость перемещения в пикселях за кадр
+const FPS = 20; // Кадров в секунду для плавной анимации
+const FRAME_DELAY = 800 / FPS; // Задержка между кадрами в миллисекундах
+const MOVE_SPEED = 20; // Скорость перемещения в пикселях за кадр
 
 type AnimationType = 'idle' | 'run';
 type Direction = 'left' | 'right';
