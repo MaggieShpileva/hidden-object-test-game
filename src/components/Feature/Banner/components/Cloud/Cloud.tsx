@@ -49,34 +49,49 @@ export const Cloud: FC<CloudProps> = ({
     return { left: cloudLeft, top: cloudTop };
   };
 
-  // Анимация появления и скрытия облака
+  const previousVisibleRef = useRef(visible);
+  const previousSceneOffsetXRef = useRef(sceneOffsetX);
+
+  // Анимация появления, скрытия и перемещения облака
   useEffect(() => {
-    if (!cloudRef.current) return;
+    if (!cloudRef.current || !bannerRef.current || !sceneRef.current) return;
 
-    if (visible && bannerRef.current && sceneRef.current) {
-      // Устанавливаем правильную позицию перед появлением
-      const position = getCloudPosition();
-      gsap.set(cloudRef.current, {
-        left: `${position.left}%`,
-        top: `${position.top}%`,
-      });
+    const position = getCloudPosition();
+    const isVisibleChanged = previousVisibleRef.current !== visible;
+    const isPositionChanged = previousSceneOffsetXRef.current !== sceneOffsetX;
 
-      // Плавное появление
-      gsap.fromTo(
-        cloudRef.current,
-        {
-          opacity: 0,
-          scale: 0.8,
-        },
-        {
-          opacity: 1,
-          scale: 1,
+    if (visible) {
+      if (isVisibleChanged) {
+        // Облако только что появилось - устанавливаем позицию и анимируем появление
+        gsap.set(cloudRef.current, {
+          left: `${position.left}%`,
+          top: `${position.top}%`,
+        });
+
+        gsap.fromTo(
+          cloudRef.current,
+          {
+            opacity: 0,
+            scale: 0.8,
+          },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.3,
+            ease: 'power2.out',
+          }
+        );
+      } else if (isPositionChanged) {
+        // Облако уже видимо, но изменилась позиция - только перемещаем
+        gsap.to(cloudRef.current, {
+          left: `${position.left}%`,
+          top: `${position.top}%`,
           duration: 0.3,
           ease: 'power2.out',
-        }
-      );
-    } else {
-      // Плавное скрытие
+        });
+      }
+    } else if (isVisibleChanged) {
+      // Облако скрывается
       gsap.to(cloudRef.current, {
         opacity: 0,
         scale: 0.8,
@@ -84,25 +99,11 @@ export const Cloud: FC<CloudProps> = ({
         ease: 'power1.in',
       });
     }
+
+    previousVisibleRef.current = visible;
+    previousSceneOffsetXRef.current = sceneOffsetX;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, bannerRef, sceneRef, areaStyle, sceneOffsetX]);
-
-  // Анимация перемещения облака при смещении сцены
-  useEffect(() => {
-    if (!cloudRef.current || !bannerRef.current || !sceneRef.current) return;
-    if (!visible) return; // Не обновляем позицию, если облако скрыто
-
-    const position = getCloudPosition();
-
-    // Плавно перемещаем облако на новую позицию
-    gsap.to(cloudRef.current, {
-      left: `${position.left}%`,
-      top: `${position.top}%`,
-      duration: 0.3,
-      ease: 'power2.out',
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sceneOffsetX, visible, bannerRef, sceneRef, areaStyle]);
+  }, [visible, sceneOffsetX, bannerRef, sceneRef, areaStyle]);
 
   return (
     <div
