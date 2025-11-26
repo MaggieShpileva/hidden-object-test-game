@@ -3,17 +3,15 @@ import type { ReactNode } from 'react';
 import { gsap } from 'gsap';
 import clsx from 'clsx';
 import styles from './Modal.module.scss';
-import { Button } from '../Button';
-import { Typography } from '../Typography';
-import { Title } from '../Title';
 
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   children?: ReactNode;
+  bonus?: { name: string; imageUrl: string; link: string } | null;
 };
 
-export const Modal: FC<ModalProps> = ({ isOpen, onClose, children }) => {
+export const Modal: FC<ModalProps> = ({ isOpen, onClose, bonus }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -87,20 +85,11 @@ export const Modal: FC<ModalProps> = ({ isOpen, onClose, children }) => {
   return (
     <div className={styles.overlay} ref={overlayRef} onClick={handleClose}>
       <div className={clsx(styles.content)} ref={contentRef} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.header}>
-          <Title tag="h2" variant="medium" className={styles.title}>
-            🏆 Поздравляем!
-          </Title>
-        </div>
-        <div className={styles.body}>
-          <Typography className={styles.message}>Вы нашли предмет скрытый предмет</Typography>
-          {children}
-        </div>
-        <div className={styles.footer}>
-          <Button variant="primary" onClick={handleClose} fullWidth>
-            Продолжить
-          </Button>
-        </div>
+        <img src={bonus?.imageUrl} alt={bonus?.name} className={styles.image} />
+        <p className={styles.name}>{bonus?.name}</p>
+        <button className={styles.button} onClick={handleClose}>
+          купить
+        </button>
       </div>
     </div>
   );

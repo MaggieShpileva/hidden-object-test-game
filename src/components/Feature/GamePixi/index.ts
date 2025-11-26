@@ -1,0 +1,1 @@
+export { GamePixi } from './GamePixi';

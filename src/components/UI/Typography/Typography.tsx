@@ -16,11 +16,10 @@ export const Typography: FC<TypographyProps> = ({
   as: Component = 'p',
 }) => {
   // Вычисляемые значения с clsx
-  const typographyClass = clsx(
-    styles.typography,
-    styles[`${variant}`],
-    className
-  );
 
-  return <Component className={typographyClass}>{children}</Component>;
+  return (
+    <Component className={clsx(className, styles.typography, styles[`${variant}`])}>
+      {children}
+    </Component>
+  );
 };

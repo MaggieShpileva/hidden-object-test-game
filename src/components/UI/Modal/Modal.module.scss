@@ -7,50 +7,49 @@
   position: fixed;
   z-index: 1000;
   display: grid;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
   inset: 0;
   place-items: center;
 }
 
 .content {
-  width: calc(100% - 64px);
-  max-width: 500px;
+  padding: 16px 14px;
+  width: 234px;
+  height: 289px;
   position: relative;
   display: flex;
   flex-direction: column;
-  border-radius: 16px;
+  border-radius: 20px;
   background-color: $bg-primary;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-.header {
-  padding: $spacing-lg $spacing-lg $spacing-md;
-  text-align: center;
-  border-bottom: 1px solid $white-030;
+.image {
+  margin: 0 auto;
+  width: 100px;
+  height: 180px;
+  transform: rotate(15deg);
+  object-fit: cover;
 }
 
-.title {
+.name {
   margin: 0;
-  color: $text-primary;
-  font-size: 28px;
-  line-height: 1.2;
+  color: black;
+  font-size: 20px;
   font-weight: 700;
 }
 
-.body {
-  padding: $spacing-lg;
+.button {
+  padding: 2px 26px 4px;
+  margin: auto auto 0;
+  width: fit-content;
+  border: none;
+  border-radius: 12px;
+  background: #dcff00;
+  color: black;
+  font-size: 16px;
+  line-height: 1.2;
   text-align: center;
-}
-
-.message {
-  margin: 0 0 $spacing-md;
-  color: $text-secondary;
-  font-size: $font-size-base;
-  line-height: 1.6;
-}
-
-.footer {
-  padding: $spacing-md $spacing-lg $spacing-lg;
-  border-top: 1px solid $white-030;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+  font-weight: 700;
 }

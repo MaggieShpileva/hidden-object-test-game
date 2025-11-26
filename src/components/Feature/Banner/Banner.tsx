@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { gsap } from 'gsap';
 import styles from './Banner.module.scss';
@@ -6,9 +6,13 @@ import { OBJECTS } from '@/mock/objects';
 import type { Object } from '@/mock/objects';
 import { Modal } from '@/components/UI/Modal';
 import JPG_Scene from '@assets/scene.jpg';
+import { Cloud } from './components/Cloud';
+import { useDragging } from './hooks/useDragging';
+import { useImageLoader } from './hooks/useImageLoader';
+import PNG_Star from '@assets/star.png';
 
-const SCENE_WIDTH = 1225;
-const SCENE_HEIGHT = 417;
+const SCENE_WIDTH = 1000;
+const SCENE_HEIGHT = 400;
 
 interface BannerProps {
   onSceneLoaded?: () => void;
@@ -18,217 +22,217 @@ export const Banner: FC<BannerProps> = ({ onSceneLoaded }) => {
   const bannerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
   const [selectedObject, setSelectedObject] = useState<Object | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef(0);
-  const lastTranslateRef = useRef(0);
-  const startTranslateRef = useRef(0);
-  const maxTranslateRef = useRef(0);
-  const setTranslateRef = useRef<((value: number) => void) | null>(null);
-  const snapStepRef = useRef(0);
+  const [visibleCloud, setVisibleCloud] = useState(false);
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [isOpenPrize, setIsOpenPrize] = useState(false);
+  const [sceneOffsetX, setSceneOffsetX] = useState(0);
+  const [clickedObjectsCount, setClickedObjectsCount] = useState(0);
+  const clickedObjectsRef = useRef<Set<number>>(new Set());
+  const pendingTargetObjectRef = useRef<Object | null>(null);
+  const bonusRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  const { isDragging, handleStart } = useDragging({
+    bannerRef,
+    sceneRef,
+    onSceneOffsetChange: setSceneOffsetX,
+    onDragStart: () => {
+      setVisibleCloud(false);
+    },
+  });
 
   const handleObjectClick = (object: Object) => {
-    if (!isDragging) {
+    if (isDragging) {
+      return;
+    }
+
+    // Увеличиваем счетчик кликов, если объект еще не был кликнут
+    if (!clickedObjectsRef.current.has(object.id)) {
+      clickedObjectsRef.current.add(object.id);
+      setClickedObjectsCount((prev) => prev + 1);
+    }
+
+    if (object.bonus) {
+      // Если это целевой объект, сначала скрываем облако, затем открываем модалку
+      setVisibleCloud(false);
       setSelectedObject(object);
+      setIsOpenPrize(true);
+      setTimeout(() => {
+        setIsOpenModal(true);
+      }, 600);
+    } else {
+      if (visibleCloud && selectedObject && !selectedObject.bonus) {
+        setSelectedObject(object);
+      } else {
+        if (visibleCloud) {
+          setVisibleCloud(false);
+          setTimeout(() => {
+            setSelectedObject(object);
+            setVisibleCloud(true);
+          }, 200);
+        } else {
+          setSelectedObject(object);
+          setVisibleCloud(true);
+        }
+      }
     }
   };
 
+  // Открываем модалку после скрытия облака
+  useEffect(() => {
+    if (!visibleCloud && pendingTargetObjectRef.current) {
+      const targetObject = pendingTargetObjectRef.current;
+      pendingTargetObjectRef.current = null;
+      // Ждем завершения анимации скрытия (200ms) перед открытием модалки
+      setTimeout(() => {
+        setSelectedObject(targetObject);
+        setIsOpenModal(true);
+      }, 200);
+    }
+  }, [visibleCloud]);
+
   const handleCloseModal = () => {
+    setIsOpenModal(false);
+    setIsOpenPrize(false);
     setSelectedObject(null);
   };
 
-  const getEventPosX = (e: MouseEvent | TouchEvent) => {
-    if ('touches' in e) {
-      return e.touches[0].clientX;
-    }
-    return e.clientX;
-  };
-
-  const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleBannerStart = (e: React.MouseEvent | React.TouchEvent) => {
+    // Не начинаем перетаскивание, если клик по изображению
     if ((e.target as HTMLElement).closest(`.${styles.image}`)) {
       return;
     }
-    if (sceneRef.current) {
-      const currentX = gsap.getProperty(sceneRef.current, 'x') as number;
-      const current = currentX || 0;
-      lastTranslateRef.current = current;
-      startTranslateRef.current = current;
-    }
-    setIsDragging(true);
-    dragStartRef.current = getEventPosX(e.nativeEvent as MouseEvent | TouchEvent);
+    handleStart(e);
   };
 
-  const handleMove = useCallback((e: MouseEvent | TouchEvent) => {
-    if (!setTranslateRef.current) return;
+  // Проверяем загрузку фонового изображения
+  useImageLoader({
+    imageSrc: JPG_Scene,
+    onLoad: onSceneLoaded,
+  });
 
-    const currentX = getEventPosX(e);
-    const deltaX = currentX - dragStartRef.current;
-    const newTranslate = lastTranslateRef.current + deltaX;
-    const clamped = gsap.utils.clamp(-maxTranslateRef.current, 0)(newTranslate);
-
-    setTranslateRef.current(clamped);
-  }, []);
-
-  const handleEnd = useCallback(() => {
-    if (!setTranslateRef.current || !sceneRef.current) return;
-
-    const currentX = gsap.getProperty(sceneRef.current, 'x') as number;
-    const clamped = gsap.utils.clamp(-maxTranslateRef.current, 0)(currentX);
-
-    // Вычисляем процент перемещения
-    const delta = Math.abs(clamped - startTranslateRef.current);
-    const deltaPercent = (delta / maxTranslateRef.current) * 100;
-
-    // Если перемещение >= 15%, применяем прилипание (более чувствительное)
-    let targetX = clamped;
-    if (deltaPercent >= 15 && snapStepRef.current > 0) {
-      // Определяем направление
-      const isMovingLeft = clamped < startTranslateRef.current;
-
-      // Вычисляем ближайшую позицию прилипания (кратное 30%)
-      const currentStep = Math.round(((Math.abs(clamped) / maxTranslateRef.current) * 100) / 30);
-      const targetStep = isMovingLeft ? currentStep + 1 : currentStep - 1;
-      const targetPercent = Math.max(0, Math.min(100, targetStep * 30));
-      targetX = -(maxTranslateRef.current * targetPercent) / 100;
-      targetX = gsap.utils.clamp(-maxTranslateRef.current, 0)(targetX);
-    } else if (deltaPercent > 0) {
-      // Даже при малом перемещении прилипаем к ближайшей позиции
-      const currentStep = Math.round(((Math.abs(clamped) / maxTranslateRef.current) * 100) / 30);
-      const targetPercent = currentStep * 30;
-      targetX = -(maxTranslateRef.current * targetPercent) / 100;
-      targetX = gsap.utils.clamp(-maxTranslateRef.current, 0)(targetX);
-    }
-
-    // Анимируем к целевой позиции с более сильным эффектом
-    gsap.to(sceneRef.current, {
-      x: targetX,
-      duration: 0.2,
-      ease: 'power3.out',
-      onUpdate: () => {
-        const x = gsap.getProperty(sceneRef.current, 'x') as number;
-        if (setTranslateRef.current) {
-          setTranslateRef.current(x);
-        }
-      },
-      onComplete: () => {
-        lastTranslateRef.current = targetX;
-        setIsDragging(false);
-      },
-    });
-  }, []);
-
+  // Анимация появления и скрытия бонусного элемента
   useEffect(() => {
-    if (!sceneRef.current) return;
+    OBJECTS.forEach((object) => {
+      if (!object.bonus) return;
 
-    // Инициализируем quickSetter для производительности
-    setTranslateRef.current = gsap.quickSetter(sceneRef.current, 'x', 'px') as (
-      value: number
-    ) => void;
+      const bonusElement = bonusRefs.current.get(object.id);
+      if (!bonusElement) return;
 
-    // Проверяем загрузку фонового изображения
-    const checkBackgroundLoaded = () => {
-      const bgImage = new Image();
-      bgImage.src = JPG_Scene;
+      if (isOpenPrize && selectedObject?.id === object.id) {
+        // Устанавливаем начальную позицию перед появлением
+        gsap.set(bonusElement, {
+          x: '-50%',
+          y: '0%',
+        });
 
-      if (bgImage.complete) {
-        // Изображение уже загружено
-        onSceneLoaded?.();
+        // Плавное появление
+        gsap.fromTo(
+          bonusElement,
+          {
+            opacity: 0,
+            scale: 0,
+            x: '50%',
+            y: '-33%',
+          },
+          {
+            opacity: 1,
+            scale: 1,
+            x: '50%',
+            y: '-33%',
+            duration: 0.3,
+            ease: 'power2.out',
+          }
+        );
       } else {
-        bgImage.onload = () => {
-          onSceneLoaded?.();
-        };
-        bgImage.onerror = () => {
-          onSceneLoaded?.();
-        };
+        // Плавное скрытие
+        gsap.to(bonusElement, {
+          opacity: 0,
+          scale: 0,
+          x: '50%',
+          y: '-33%',
+          duration: 0.2,
+          ease: 'power1.in',
+        });
       }
-    };
-
-    // Проверяем загрузку сразу
-    checkBackgroundLoaded();
-
-    const calculateMaxTranslate = () => {
-      if (bannerRef.current && sceneRef.current) {
-        const bannerWidth = bannerRef.current.offsetWidth;
-        const sceneWidth = sceneRef.current.offsetWidth;
-        const max = Math.max(0, sceneWidth - bannerWidth);
-        maxTranslateRef.current = max;
-
-        // Вычисляем шаг прилипания (30% от максимального перемещения)
-        snapStepRef.current = max * 0.3;
-
-        // Ограничиваем текущий translate при изменении размера
-        const currentX = gsap.getProperty(sceneRef.current, 'x') as number;
-        const clamped = gsap.utils.clamp(-max, 0)(currentX);
-        if (setTranslateRef.current) {
-          setTranslateRef.current(clamped);
-        }
-        lastTranslateRef.current = clamped;
-        startTranslateRef.current = clamped;
-      }
-    };
-
-    calculateMaxTranslate();
-
-    window.addEventListener('resize', calculateMaxTranslate);
-
-    return () => {
-      window.removeEventListener('resize', calculateMaxTranslate);
-      if (setTranslateRef.current) {
-        setTranslateRef.current = null;
-      }
-    };
-  }, [onSceneLoaded]);
-
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const handleMouseMove = (e: MouseEvent) => handleMove(e);
-    const handleMouseUp = () => handleEnd();
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-      handleMove(e);
-    };
-    const handleTouchEnd = () => handleEnd();
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [isDragging, handleMove, handleEnd]);
+    });
+  }, [isOpenPrize, selectedObject]);
 
   return (
     <>
       <section
         ref={bannerRef}
         className={styles.banner}
-        onMouseDown={handleStart}
-        onTouchStart={handleStart}
+        onMouseDown={handleBannerStart}
+        onTouchStart={handleBannerStart}
       >
         <div ref={sceneRef} className={styles.scene}>
           {OBJECTS.map((object) => (
-            <img
+            <div
               key={object.id}
-              src={object.image}
-              alt={object.name}
-              className={styles.image}
-              onClick={() => handleObjectClick(object)}
+              className={styles.object}
               style={{
                 left: `${(object.position.x / SCENE_WIDTH) * 100}%`,
                 top: `${(object.position.y / SCENE_HEIGHT) * 100}%`,
                 width: `${(object.size.width / SCENE_WIDTH) * 100}%`,
                 height: `${(object.size.height / SCENE_HEIGHT) * 100}%`,
               }}
-            />
+              onClick={() => handleObjectClick(object)}
+            >
+              <img src={object.image} alt={object.name} className={styles.image} />
+              {object.bonus && (
+                <div
+                  ref={(el) => {
+                    if (el) {
+                      bonusRefs.current.set(object.id, el);
+                    } else {
+                      bonusRefs.current.delete(object.id);
+                    }
+                  }}
+                  className={styles.bonus}
+                  style={{
+                    opacity: 0,
+                    pointerEvents:
+                      isOpenPrize && selectedObject?.id === object.id ? 'auto' : 'none',
+                  }}
+                >
+                  <img src={PNG_Star} alt="star" className={styles.bonusImage} />
+                  <img
+                    src={object.bonus.imageUrl}
+                    alt={object.bonus.name}
+                    className={styles.prizeImage}
+                  />
+                </div>
+              )}
+            </div>
           ))}
+          <div
+            className={styles.additionalObject}
+            style={{
+              left: `${(190 / SCENE_WIDTH) * 100}%`,
+              top: `${(0 / SCENE_HEIGHT) * 100}%`,
+              width: `${(100 / SCENE_WIDTH) * 100}%`,
+              height: `${(170 / SCENE_HEIGHT) * 100}%`,
+            }}
+            onClick={() => setVisibleCloud(true)}
+          />
         </div>
       </section>
-      <Modal isOpen={!!selectedObject} onClose={handleCloseModal} />
+      <Modal isOpen={isOpenModal} onClose={handleCloseModal} bonus={selectedObject?.bonus} />
+      <Cloud
+        visible={visibleCloud}
+        sceneOffsetX={sceneOffsetX}
+        bannerRef={bannerRef}
+        sceneRef={sceneRef}
+        areaStyle={{
+          left: 180,
+          top: 20,
+          width: 110,
+          height: 170,
+        }}
+      />
+      <div className={styles.count}>
+        {clickedObjectsCount}/{OBJECTS.length}
+      </div>
     </>
   );
 };

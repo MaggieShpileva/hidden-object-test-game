@@ -6,7 +6,13 @@ const getErrorMessage = (error: unknown): string => {
   if (isRouteErrorResponse(error)) {
     return error.statusText || 'An error occurred';
   }
-  if (error instanceof Error) {
+  // Безопасная проверка на Error с проверкой наличия конструктора
+  if (
+    error &&
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof (error as Error).message === 'string'
+  ) {
     return (error as Error).message;
   }
   if (typeof error === 'string') {
