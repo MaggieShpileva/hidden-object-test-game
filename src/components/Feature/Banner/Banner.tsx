@@ -5,11 +5,16 @@ import styles from './Banner.module.scss';
 import { OBJECTS } from '@/mock/objects';
 import type { Object } from '@/mock/objects';
 import { Modal } from '@/components/UI/Modal';
+import JPG_Scene from '@assets/scene.jpg';
 
 const SCENE_WIDTH = 1225;
 const SCENE_HEIGHT = 417;
 
-export const Banner: FC = () => {
+interface BannerProps {
+  onSceneLoaded?: () => void;
+}
+
+export const Banner: FC<BannerProps> = ({ onSceneLoaded }) => {
   const bannerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
   const [selectedObject, setSelectedObject] = useState<Object | null>(null);
@@ -119,6 +124,27 @@ export const Banner: FC = () => {
       value: number
     ) => void;
 
+    // Проверяем загрузку фонового изображения
+    const checkBackgroundLoaded = () => {
+      const bgImage = new Image();
+      bgImage.src = JPG_Scene;
+
+      if (bgImage.complete) {
+        // Изображение уже загружено
+        onSceneLoaded?.();
+      } else {
+        bgImage.onload = () => {
+          onSceneLoaded?.();
+        };
+        bgImage.onerror = () => {
+          onSceneLoaded?.();
+        };
+      }
+    };
+
+    // Проверяем загрузку сразу
+    checkBackgroundLoaded();
+
     const calculateMaxTranslate = () => {
       if (bannerRef.current && sceneRef.current) {
         const bannerWidth = bannerRef.current.offsetWidth;
@@ -150,7 +176,7 @@ export const Banner: FC = () => {
         setTranslateRef.current = null;
       }
     };
-  }, []);
+  }, [onSceneLoaded]);
 
   useEffect(() => {
     if (!isDragging) return;

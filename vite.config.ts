@@ -17,4 +17,19 @@ export default defineConfig({
       '@types': path.resolve(__dirname, './src/types'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Выделяем React и React DOM в отдельный чанк
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // Выделяем GSAP в отдельный чанк
+          gsap: ['gsap'],
+          // Выделяем Lottie в отдельный чанк
+          lottie: ['lottie-react'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000, // Увеличиваем лимит до 1MB для предупреждений
+  },
 });
