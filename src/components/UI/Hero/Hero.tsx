@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { FC } from 'react';
 import { gsap } from 'gsap';
 import styles from './Hero.module.scss';
@@ -51,8 +51,8 @@ const RUN_ANIMATE = [
   RUN_ANIMATE11,
 ];
 
-const FPS = 20; // Кадров в секунду для плавной анимации
-const FRAME_DELAY = 800 / FPS; // Задержка между кадрами в миллисекундах
+const FPS = 12; // Кадров в секунду для плавной анимации
+const FRAME_DELAY = 500 / FPS; // Задержка между кадрами в миллисекундах
 const MOVE_SPEED = 20; // Скорость перемещения в пикселях за кадр
 
 type AnimationType = 'idle' | 'run';
@@ -63,17 +63,27 @@ export const Hero: FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number>(0);
-  const [animationType, setAnimationType] = useState<AnimationType>('idle');
-  const [direction, setDirection] = useState<Direction>('right');
+  const animationTypeRef = useRef<AnimationType>('idle');
+  const directionRef = useRef<Direction>('right');
   const moveTweenRef = useRef<gsap.core.Tween | null>(null);
   const pressedKeysRef = useRef<Set<string>>(new Set());
+  const containerBoundsRef = useRef({ width: 0, canvasWidth: 300, maxX: 0 });
+  const lastBoundsUpdateRef = useRef<number>(0);
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d', { alpha: true });
+    // Оптимизация canvas для лучшей производительности
+    const ctx = canvas.getContext('2d', {
+      alpha: true,
+      willReadFrequently: false,
+      desynchronized: true,
+    });
     if (!ctx) return;
+
+    // Оптимизация отрисовки
+    ctx.imageSmoothingEnabled = false;
 
     let idleImages: HTMLImageElement[] = [];
     let runImages: HTMLImageElement[] = [];
@@ -81,8 +91,6 @@ export const Hero: FC = () => {
     let loadedRun = 0;
     let frame = 0;
     let isAnimationRunning = false;
-    let currentAnimationType: AnimationType = 'idle';
-    let currentDirection: Direction = 'right';
 
     // Загружаем все кадры
     const loadImages = () => {
@@ -147,9 +155,9 @@ export const Hero: FC = () => {
       const animate = (currentTime: number) => {
         if (!isAnimationRunning) return;
 
-        // Обновляем текущие значения из состояния
-        currentAnimationType = animationType;
-        currentDirection = direction;
+        // Используем refs вместо state для избежания задержек
+        const currentAnimationType = animationTypeRef.current;
+        const currentDirection = directionRef.current;
 
         const elapsed = currentTime - lastFrameTimeRef.current;
 
@@ -208,7 +216,7 @@ export const Hero: FC = () => {
       idleImages = [];
       runImages = [];
     };
-  }, [animationType, direction]);
+  }, []); // Убираем зависимости для избежания пересоздания
 
   // Обработка клавиатуры и перемещения
   useEffect(() => {
@@ -235,11 +243,34 @@ export const Hero: FC = () => {
       const hasLeft = pressedKeysRef.current.has('ArrowLeft');
 
       if (hasRight || hasLeft) {
-        setAnimationType('run');
-        setDirection(hasRight ? 'right' : 'left');
+        animationTypeRef.current = 'run';
+        directionRef.current = hasRight ? 'right' : 'left';
       } else {
-        setAnimationType('idle');
+        animationTypeRef.current = 'idle';
       }
+    };
+
+    const BOUNDS_UPDATE_INTERVAL = 100; // Обновляем размеры раз в 100мс
+
+    const updateBounds = () => {
+      const container = containerRef.current?.parentElement;
+      if (!container || !containerRef.current) return;
+
+      const now = performance.now();
+      if (now - lastBoundsUpdateRef.current < BOUNDS_UPDATE_INTERVAL) {
+        return; // Используем кешированные значения
+      }
+
+      const containerRect = container.getBoundingClientRect();
+      const canvasWidth = containerRef.current.offsetWidth || 300;
+      const maxX = Math.max(0, containerRect.width - canvasWidth);
+
+      containerBoundsRef.current = {
+        width: containerRect.width,
+        canvasWidth,
+        maxX,
+      };
+      lastBoundsUpdateRef.current = now;
     };
 
     const startMovement = () => {
@@ -254,19 +285,16 @@ export const Hero: FC = () => {
           return;
         }
 
-        const container = containerRef.current?.parentElement;
-        if (!container || !containerRef.current) return;
+        if (!containerRef.current) return;
 
-        const containerRect = container.getBoundingClientRect();
-        const containerWidth = containerRect.width;
-        const canvasWidth = containerRef.current.offsetWidth || 300;
-        const maxX = Math.max(0, containerWidth - canvasWidth);
+        // Обновляем размеры только при необходимости
+        updateBounds();
 
         const currentX = (gsap.getProperty(containerRef.current, 'x') as number) || 0;
         let targetX = currentX;
 
         if (hasRight) {
-          targetX = Math.min(currentX + MOVE_SPEED, maxX);
+          targetX = Math.min(currentX + MOVE_SPEED, containerBoundsRef.current.maxX);
         } else if (hasLeft) {
           targetX = Math.max(currentX - MOVE_SPEED, 0);
         }
@@ -278,7 +306,7 @@ export const Hero: FC = () => {
 
         moveTweenRef.current = gsap.to(containerRef.current, {
           x: targetX,
-          duration: 0.1,
+          duration: 0.05, // Уменьшаем duration для более отзывчивого управления
           ease: 'none',
           onComplete: () => {
             if (
