@@ -1,0 +1,279 @@
+{
+  "frames": {
+    "Slide (6).png": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 562,
+        "h": 433
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 36,
+        "y": 167,
+        "w": 562,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Slide (5).png": {
+      "frame": {
+        "x": 562,
+        "y": 0,
+        "w": 561,
+        "h": 433
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 37,
+        "y": 166,
+        "w": 561,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Slide (7).png": {
+      "frame": {
+        "x": 1123,
+        "y": 0,
+        "w": 559,
+        "h": 433
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 39,
+        "y": 166,
+        "w": 559,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Slide (4).png": {
+      "frame": {
+        "x": 0,
+        "y": 433,
+        "w": 558,
+        "h": 433
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 40,
+        "y": 165,
+        "w": 558,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Slide (8).png": {
+      "frame": {
+        "x": 0,
+        "y": 991,
+        "w": 556,
+        "h": 433
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 43,
+        "y": 165,
+        "w": 556,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Slide (3).png": {
+      "frame": {
+        "x": 0,
+        "y": 1547,
+        "w": 555,
+        "h": 433
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 44,
+        "y": 164,
+        "w": 555,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Slide (2).png": {
+      "frame": {
+        "x": 555,
+        "y": 1547,
+        "w": 551,
+        "h": 433
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 48,
+        "y": 164,
+        "w": 551,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Slide (9).png": {
+      "frame": {
+        "x": 1106,
+        "y": 433,
+        "w": 551,
+        "h": 433
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 47,
+        "y": 164,
+        "w": 551,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Slide (10).png": {
+      "frame": {
+        "x": 433,
+        "y": 433,
+        "w": 549,
+        "h": 433
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 50,
+        "y": 164,
+        "w": 549,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Slide (11).png": {
+      "frame": {
+        "x": 433,
+        "y": 866,
+        "w": 547,
+        "h": 433
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 52,
+        "y": 163,
+        "w": 547,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Slide (1).png": {
+      "frame": {
+        "x": 866,
+        "y": 866,
+        "w": 545,
+        "h": 433
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 54,
+        "y": 163,
+        "w": 545,
+        "h": 433
+      },
+      "sourceSize": {
+        "w": 934,
+        "h": 641
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "app": "http://free-tex-packer.com",
+    "version": "0.6.7",
+    "image": "texture.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1682,
+      "h": 1980
+    },
+    "scale": 1
+  }
+}
