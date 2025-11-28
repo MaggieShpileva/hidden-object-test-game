@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { Application, useExtend } from '@pixi/react';
-import { Container, Graphics, Sprite, Assets, AnimatedSprite, Texture } from 'pixi.js';
+import { Container, Graphics, Sprite, Assets, AnimatedSprite, Texture, Spritesheet } from 'pixi.js';
 import type { AnimatedSprite as AnimatedSpriteType } from 'pixi.js';
 import type { Sprite as SpriteType } from 'pixi.js';
 import styles from './GamePixi.module.scss';
@@ -8,6 +8,9 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import idleAnimationJsonUrl from '@assets/animations/idle/idle.json?url';
 import runAnimationJsonUrl from '@assets/animations/run/run.json?url';
 import jumpAnimationJsonUrl from '@assets/animations/jump/jump.json?url';
+import idleTextureUrl from '@assets/animations/idle/texture.png';
+import runTextureUrl from '@assets/animations/run/texture.png';
+import jumpTextureUrl from '@assets/animations/jump/texture.png';
 import winterBgImage from '@assets/winter-bg.jpg';
 
 const SPRITE_SCALE = 0.3;
@@ -93,7 +96,16 @@ export const GamePixi: FC = () => {
     const loadAnimations = async () => {
       try {
         // Загружаем idle анимацию
-        const idleSheet = await Assets.load(idleAnimationJsonUrl);
+        // Загружаем JSON и текстуру отдельно
+        const [idleJsonData, idleTexture] = await Promise.all([
+          fetch(idleAnimationJsonUrl).then((res) => res.json()),
+          Assets.load(idleTextureUrl),
+        ]);
+        // Исправляем путь к текстуре
+        idleJsonData.meta.image = idleTextureUrl;
+        // Создаем спрайт-лист вручную
+        const idleSheet = new Spritesheet(idleTexture, idleJsonData);
+        await idleSheet.parse();
         let idleAnimationTextures: Texture[] | undefined;
 
         if (idleSheet.animations && Object.keys(idleSheet.animations).length > 0) {
@@ -118,7 +130,13 @@ export const GamePixi: FC = () => {
         }
 
         // Загружаем run анимацию
-        const runSheet = await Assets.load(runAnimationJsonUrl);
+        const [runJsonData, runTexture] = await Promise.all([
+          fetch(runAnimationJsonUrl).then((res) => res.json()),
+          Assets.load(runTextureUrl),
+        ]);
+        runJsonData.meta.image = runTextureUrl;
+        const runSheet = new Spritesheet(runTexture, runJsonData);
+        await runSheet.parse();
         let runAnimationTextures: Texture[] | undefined;
 
         if (runSheet.animations && Object.keys(runSheet.animations).length > 0) {
@@ -143,7 +161,13 @@ export const GamePixi: FC = () => {
         }
 
         // Загружаем jump анимацию
-        const jumpSheet = await Assets.load(jumpAnimationJsonUrl);
+        const [jumpJsonData, jumpTexture] = await Promise.all([
+          fetch(jumpAnimationJsonUrl).then((res) => res.json()),
+          Assets.load(jumpTextureUrl),
+        ]);
+        jumpJsonData.meta.image = jumpTextureUrl;
+        const jumpSheet = new Spritesheet(jumpTexture, jumpJsonData);
+        await jumpSheet.parse();
         let jumpAnimationTextures: Texture[] | undefined;
 
         if (jumpSheet.animations && Object.keys(jumpSheet.animations).length > 0) {
