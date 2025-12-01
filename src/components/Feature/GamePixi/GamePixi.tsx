@@ -3,8 +3,9 @@ import { Application, useExtend } from '@pixi/react';
 import { Container, Graphics, Sprite } from 'pixi.js';
 import styles from './GamePixi.module.scss';
 import { useState, useEffect, useRef } from 'react';
-import { Background, Hero, Platforms, Loader } from './components';
+import { Background, Hero, Platforms, Gifts, Loader } from './components';
 import type { PlatformData } from './components/Platforms';
+import type { GiftData } from './components/Gifts';
 import { Modal, Button, Title, Typography } from '@components/UI';
 import backgroundMusicUrl from '@assets/sounds/ikson-merry.mp3';
 
@@ -21,6 +22,8 @@ export const GamePixi: FC = () => {
   const spriteXRef = useRef(200);
   const backgroundOffsetRef = useRef(0);
   const platformsRef = useRef<PlatformData[]>([]);
+  const giftsRef = useRef<GiftData[]>([]);
+  const collectedGiftsRef = useRef<Set<number>>(new Set());
 
   // Обработка изменения размера окна
   useEffect(() => {
@@ -52,7 +55,7 @@ export const GamePixi: FC = () => {
   // Инициализация фоновой музыки
   useEffect(() => {
     backgroundMusicRef.current = new Audio(backgroundMusicUrl);
-    backgroundMusicRef.current.volume = 0.3; // Устанавливаем громкость (0.0 - 1.0)
+    backgroundMusicRef.current.volume = 0.1; // Устанавливаем громкость (0.0 - 1.0)
     backgroundMusicRef.current.loop = true; // Включаем зацикливание
     backgroundMusicRef.current.preload = 'auto';
 
@@ -114,6 +117,8 @@ export const GamePixi: FC = () => {
     spriteXRef.current = 200;
     backgroundOffsetRef.current = 0;
     platformsRef.current = [];
+    giftsRef.current = [];
+    collectedGiftsRef.current.clear();
     setGameKey((prev) => prev + 1); // Изменяем ключ для принудительного рестарта компонентов
     // Музыка автоматически возобновится через useEffect при изменении isGameOver
   };
@@ -144,16 +149,24 @@ export const GamePixi: FC = () => {
             backgroundOffsetRef={backgroundOffsetRef}
             platformsRef={platformsRef}
           />
+          <Gifts
+            windowSize={windowSize}
+            backgroundOffsetRef={backgroundOffsetRef}
+            giftsRef={giftsRef}
+            collectedGiftsRef={collectedGiftsRef}
+          />
           <Hero
             key={gameKey}
             windowSize={windowSize}
             pressedKeysRef={pressedKeysRef}
             spriteXRef={spriteXRef}
             platformsRef={platformsRef}
+            giftsRef={giftsRef}
+            collectedGiftsRef={collectedGiftsRef}
             backgroundOffsetRef={backgroundOffsetRef}
-            onMove={() => {
+            onGiftCollect={() => {
               setCount((prev) => prev + 1);
-              // Запускаем музыку при первом движении
+              // Запускаем музыку при первом сборе подарка
               startMusic.current();
             }}
             onGameOver={handleGameOver}

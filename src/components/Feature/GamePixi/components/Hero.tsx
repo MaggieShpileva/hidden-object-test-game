@@ -10,6 +10,8 @@ import idleTextureUrl from '@assets/animations/idle/texture.png';
 import runTextureUrl from '@assets/animations/run/texture.png';
 import jumpTextureUrl from '@assets/animations/jump/texture.png';
 import jumpSoundUrl from '@assets/sounds/jump.mp3';
+import magicSound1Url from '@assets/sounds/magic-1.mp3';
+import magicSound2Url from '@assets/sounds/magic-2.mp3';
 
 const SPRITE_SCALE = 0.3;
 const SPRITE_SPEED = 5;
@@ -27,8 +29,12 @@ type HeroProps = {
   pressedKeysRef: React.MutableRefObject<Set<string>>;
   spriteXRef: React.MutableRefObject<number>;
   platformsRef: React.MutableRefObject<Array<{ id: number; x: number; y: number; width: number }>>;
+  giftsRef: React.MutableRefObject<
+    Array<{ id: number; x: number; y: number; width: number; height: number }>
+  >;
+  collectedGiftsRef: React.MutableRefObject<Set<number>>;
   backgroundOffsetRef: React.MutableRefObject<number>;
-  onMove: () => void;
+  onGiftCollect: () => void;
   onGameOver: () => void;
 };
 
@@ -37,8 +43,10 @@ export const Hero: FC<HeroProps> = ({
   pressedKeysRef,
   spriteXRef,
   platformsRef,
+  giftsRef,
+  collectedGiftsRef,
   backgroundOffsetRef,
-  onMove,
+  onGiftCollect,
   onGameOver,
 }) => {
   useExtend({ AnimatedSprite });
@@ -58,6 +66,8 @@ export const Hero: FC<HeroProps> = ({
   const spriteYRef = useRef(GROUND_Y);
   const gameOverCalledRef = useRef(false);
   const jumpSoundRef = useRef<HTMLAudioElement | null>(null);
+  const magicSound1Ref = useRef<HTMLAudioElement | null>(null);
+  const magicSound2Ref = useRef<HTMLAudioElement | null>(null);
 
   // Загрузка звука прыжка
   useEffect(() => {
@@ -69,6 +79,28 @@ export const Hero: FC<HeroProps> = ({
       if (jumpSoundRef.current) {
         jumpSoundRef.current.pause();
         jumpSoundRef.current = null;
+      }
+    };
+  }, []);
+
+  // Загрузка звуков сбора подарков
+  useEffect(() => {
+    magicSound1Ref.current = new Audio(magicSound1Url);
+    magicSound1Ref.current.volume = 0.5;
+    magicSound1Ref.current.preload = 'auto';
+
+    magicSound2Ref.current = new Audio(magicSound2Url);
+    magicSound2Ref.current.volume = 0.5;
+    magicSound2Ref.current.preload = 'auto';
+
+    return () => {
+      if (magicSound1Ref.current) {
+        magicSound1Ref.current.pause();
+        magicSound1Ref.current = null;
+      }
+      if (magicSound2Ref.current) {
+        magicSound2Ref.current.pause();
+        magicSound2Ref.current = null;
       }
     };
   }, []);
@@ -281,6 +313,61 @@ export const Hero: FC<HeroProps> = ({
     [backgroundOffsetRef, platformsRef]
   );
 
+  // Функция проверки коллизии с подарками
+  const checkGiftCollision = useCallback(
+    (heroX: number, heroY: number, heroWidth: number, heroHeight: number): void => {
+      const offset = backgroundOffsetRef.current;
+      const gifts = giftsRef.current;
+
+      // Проверяем коллизию с каждым подарком
+      for (const gift of gifts) {
+        // Пропускаем уже собранные подарки
+        if (collectedGiftsRef.current.has(gift.id)) {
+          continue;
+        }
+
+        const giftScreenX = gift.x + offset;
+        const giftScreenY = gift.y;
+
+        // Проверяем коллизию AABB (Axis-Aligned Bounding Box)
+        const heroLeft = heroX - heroWidth / 2;
+        const heroRight = heroX + heroWidth / 2;
+        const heroTop = heroY - heroHeight / 2;
+        const heroBottom = heroY + heroHeight / 2;
+
+        const giftLeft = giftScreenX - gift.width / 2;
+        const giftRight = giftScreenX + gift.width / 2;
+        const giftTop = giftScreenY - gift.height / 2;
+        const giftBottom = giftScreenY + gift.height / 2;
+
+        // Проверяем пересечение
+        if (
+          heroRight > giftLeft &&
+          heroLeft < giftRight &&
+          heroBottom > giftTop &&
+          heroTop < giftBottom
+        ) {
+          // Коллизия обнаружена - собираем подарок
+          // Не удаляем из массива сразу, только помечаем как собранный
+          // Удаление произойдет когда подарок уйдет за экран
+          collectedGiftsRef.current.add(gift.id);
+
+          // Воспроизводим случайный звук сбора подарка
+          const randomSound = Math.random() < 0.5 ? magicSound1Ref.current : magicSound2Ref.current;
+          if (randomSound) {
+            randomSound.currentTime = 0; // Сбрасываем на начало
+            randomSound.play().catch((error) => {
+              console.warn('Failed to play gift collection sound:', error);
+            });
+          }
+
+          onGiftCollect();
+        }
+      }
+    },
+    [backgroundOffsetRef, giftsRef, collectedGiftsRef, onGiftCollect]
+  );
+
   // Физика и игровой цикл
   useEffect(() => {
     const updatePhysics = () => {
@@ -314,6 +401,9 @@ export const Hero: FC<HeroProps> = ({
         }
       }
 
+      // Проверяем коллизию с подарками
+      checkGiftCollision(spriteXRef.current, spriteYRef.current, HERO_WIDTH, HERO_HEIGHT);
+
       // Обновляем состояние
       setSpriteY(spriteYRef.current);
       setVelocityY(velocityYRef.current);
@@ -335,8 +425,6 @@ export const Hero: FC<HeroProps> = ({
         if (newX >= fixedPosition) {
           spriteXRef.current = fixedPosition;
           setSpriteX(fixedPosition);
-          // Вызываем onMove когда герой движется вперед (даже при фиксированной позиции)
-          onMove();
         } else {
           if (typeof window !== 'undefined') {
             spriteXRef.current = Math.min(window.innerWidth, newX);
@@ -345,8 +433,6 @@ export const Hero: FC<HeroProps> = ({
           }
 
           setSpriteX(spriteXRef.current);
-          // Вызываем onMove когда герой движется вперед
-          onMove();
         }
       }
 
@@ -369,7 +455,7 @@ export const Hero: FC<HeroProps> = ({
     platformsRef,
     backgroundOffsetRef,
     checkPlatformCollision,
-    onMove,
+    checkGiftCollision,
     onGameOver,
   ]);
 
@@ -440,6 +526,7 @@ export const Hero: FC<HeroProps> = ({
     backgroundOffsetRef,
     spriteXRef,
     checkPlatformCollision,
+    checkGiftCollision,
   ]);
 
   if (!currentTextures || currentTextures.length === 0) {

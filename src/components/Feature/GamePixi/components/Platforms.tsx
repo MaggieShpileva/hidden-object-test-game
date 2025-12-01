@@ -33,7 +33,7 @@ const MIN_PLATFORM_DISTANCE = 50; // Минимальное расстояние
 const MAX_PLATFORM_DISTANCE = 150; // Максимальное расстояние между платформами
 const PLATFORM_GENERATION_DISTANCE = 1000; // Расстояние справа от экрана, где генерируются новые платформы
 const MIN_PLATFORM_Y = 450; // Минимальная высота платформы
-const MAX_PLATFORM_Y = 550; // Максимальная высота платформы
+const MAX_PLATFORM_Y = 650; // Максимальная высота платформы
 const HERO_START_X = 200; // Начальная позиция героя по X
 const HERO_GROUND_Y = 470; // Высота земли, на которой стоит герой
 
