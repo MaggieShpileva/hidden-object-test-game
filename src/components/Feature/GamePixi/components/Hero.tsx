@@ -9,6 +9,7 @@ import jumpAnimationJsonUrl from '@assets/animations/jump/jump.json?url';
 import idleTextureUrl from '@assets/animations/idle/texture.png';
 import runTextureUrl from '@assets/animations/run/texture.png';
 import jumpTextureUrl from '@assets/animations/jump/texture.png';
+import jumpSoundUrl from '@assets/sounds/jump.mp3';
 
 const SPRITE_SCALE = 0.3;
 const SPRITE_SPEED = 5;
@@ -27,6 +28,8 @@ type HeroProps = {
   spriteXRef: React.MutableRefObject<number>;
   platformsRef: React.MutableRefObject<Array<{ id: number; x: number; y: number; width: number }>>;
   backgroundOffsetRef: React.MutableRefObject<number>;
+  onMove: () => void;
+  onGameOver: () => void;
 };
 
 export const Hero: FC<HeroProps> = ({
@@ -35,6 +38,8 @@ export const Hero: FC<HeroProps> = ({
   spriteXRef,
   platformsRef,
   backgroundOffsetRef,
+  onMove,
+  onGameOver,
 }) => {
   useExtend({ AnimatedSprite });
 
@@ -51,6 +56,22 @@ export const Hero: FC<HeroProps> = ({
   const animationFrameRef = useRef<number | null>(null);
   const velocityYRef = useRef(0);
   const spriteYRef = useRef(GROUND_Y);
+  const gameOverCalledRef = useRef(false);
+  const jumpSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  // Загрузка звука прыжка
+  useEffect(() => {
+    jumpSoundRef.current = new Audio(jumpSoundUrl);
+    jumpSoundRef.current.volume = 0.5; // Устанавливаем громкость (0.0 - 1.0)
+    jumpSoundRef.current.preload = 'auto';
+
+    return () => {
+      if (jumpSoundRef.current) {
+        jumpSoundRef.current.pause();
+        jumpSoundRef.current = null;
+      }
+    };
+  }, []);
 
   // Загрузка анимаций
   useEffect(() => {
@@ -282,8 +303,16 @@ export const Hero: FC<HeroProps> = ({
         spriteYRef.current = collision.platformY;
         velocityYRef.current = 0;
         setIsJumping(false);
+      } else {
+        // Проверяем, упал ли герой ниже сцены
+        if (spriteYRef.current > windowSize.height + 100 && !gameOverCalledRef.current) {
+          // Герой упал ниже экрана - игра окончена
+          gameOverCalledRef.current = true;
+          setTimeout(() => {
+            onGameOver();
+          }, 600);
+        }
       }
-      // Если герой не на платформе, он продолжает падать (может упасть ниже сцены)
 
       // Обновляем состояние
       setSpriteY(spriteYRef.current);
@@ -306,13 +335,18 @@ export const Hero: FC<HeroProps> = ({
         if (newX >= fixedPosition) {
           spriteXRef.current = fixedPosition;
           setSpriteX(fixedPosition);
+          // Вызываем onMove когда герой движется вперед (даже при фиксированной позиции)
+          onMove();
         } else {
           if (typeof window !== 'undefined') {
             spriteXRef.current = Math.min(window.innerWidth, newX);
           } else {
             spriteXRef.current = newX;
           }
+
           setSpriteX(spriteXRef.current);
+          // Вызываем onMove когда герой движется вперед
+          onMove();
         }
       }
 
@@ -328,12 +362,15 @@ export const Hero: FC<HeroProps> = ({
     };
   }, [
     windowSize.width,
+    windowSize.height,
     spriteX,
     pressedKeysRef,
     spriteXRef,
     platformsRef,
     backgroundOffsetRef,
     checkPlatformCollision,
+    onMove,
+    onGameOver,
   ]);
 
   // Обработка нажатий клавиш стрелок
@@ -354,6 +391,13 @@ export const Hero: FC<HeroProps> = ({
           setIsJumping(true);
           velocityYRef.current = -JUMP_POWER;
           setVelocityY(-JUMP_POWER);
+          // Воспроизводим звук прыжка
+          if (jumpSoundRef.current) {
+            jumpSoundRef.current.currentTime = 0; // Сбрасываем на начало
+            jumpSoundRef.current.play().catch((error) => {
+              console.warn('Failed to play jump sound:', error);
+            });
+          }
         }
       } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
         event.preventDefault();
@@ -389,7 +433,14 @@ export const Hero: FC<HeroProps> = ({
         window.removeEventListener('keyup', handleKeyUp);
       };
     }
-  }, [isJumping, pressedKeysRef, platformsRef, backgroundOffsetRef, spriteXRef]);
+  }, [
+    isJumping,
+    pressedKeysRef,
+    platformsRef,
+    backgroundOffsetRef,
+    spriteXRef,
+    checkPlatformCollision,
+  ]);
 
   if (!currentTextures || currentTextures.length === 0) {
     return null;

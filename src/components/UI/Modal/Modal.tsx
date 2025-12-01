@@ -9,9 +9,10 @@ type ModalProps = {
   onClose: () => void;
   children?: ReactNode;
   bonus?: { name: string; imageUrl: string; link: string } | null;
+  className?: string;
 };
 
-export const Modal: FC<ModalProps> = ({ isOpen, onClose, bonus }) => {
+export const Modal: FC<ModalProps> = ({ isOpen, onClose, bonus, children, className }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -84,12 +85,22 @@ export const Modal: FC<ModalProps> = ({ isOpen, onClose, bonus }) => {
 
   return (
     <div className={styles.overlay} ref={overlayRef} onClick={handleClose}>
-      <div className={clsx(styles.content)} ref={contentRef} onClick={(e) => e.stopPropagation()}>
-        <img src={bonus?.imageUrl} alt={bonus?.name} className={styles.image} />
-        <p className={styles.name}>{bonus?.name}</p>
-        <button className={styles.button} onClick={handleClose}>
-          купить
-        </button>
+      <div
+        className={clsx(styles.content, className)}
+        ref={contentRef}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children ? (
+          children
+        ) : (
+          <>
+            <img src={bonus?.imageUrl} alt={bonus?.name} className={styles.image} />
+            <p className={styles.name}>{bonus?.name}</p>
+            <button className={styles.button} onClick={handleClose}>
+              купить
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

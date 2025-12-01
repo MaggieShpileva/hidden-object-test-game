@@ -3,13 +3,18 @@ import { Sprite, Assets, Texture } from 'pixi.js';
 import type { Sprite as SpriteType } from 'pixi.js';
 import { useExtend } from '@pixi/react';
 import { useState, useEffect, useRef } from 'react';
-import platformImage from '@assets/platform.png';
+import platformImage1 from '@assets/platforms/image-1.png';
+import platformImage2 from '@assets/platforms/image-2.png';
+import platformImage4 from '@assets/platforms/image-4.png';
+import platformImage5 from '@assets/platforms/image-5.png';
+import platformImage6 from '@assets/platforms/image-6.png';
 
 export type PlatformData = {
   id: number;
   x: number; // Позиция относительно начального фона (без учета offset)
   y: number;
   width: number;
+  textureIndex: number; // Индекс текстуры из массива платформ
 };
 
 type PlatformsProps = {
@@ -21,16 +26,25 @@ type PlatformsProps = {
   platformsRef: React.MutableRefObject<PlatformData[]>;
 };
 
-const PLATFORM_HEIGHT = 20; // Высота платформы
+const PLATFORM_HEIGHT = 50; // Высота платформы
 const MIN_PLATFORM_WIDTH = 150;
 const MAX_PLATFORM_WIDTH = 250;
-const MIN_PLATFORM_DISTANCE = 150; // Минимальное расстояние между платформами
-const MAX_PLATFORM_DISTANCE = 220; // Максимальное расстояние между платформами
+const MIN_PLATFORM_DISTANCE = 50; // Минимальное расстояние между платформами
+const MAX_PLATFORM_DISTANCE = 150; // Максимальное расстояние между платформами
 const PLATFORM_GENERATION_DISTANCE = 1000; // Расстояние справа от экрана, где генерируются новые платформы
 const MIN_PLATFORM_Y = 450; // Минимальная высота платформы
 const MAX_PLATFORM_Y = 550; // Максимальная высота платформы
 const HERO_START_X = 200; // Начальная позиция героя по X
 const HERO_GROUND_Y = 470; // Высота земли, на которой стоит герой
+
+// Массив путей к изображениям платформ
+const PLATFORM_IMAGES = [
+  platformImage1,
+  platformImage2,
+  platformImage4,
+  platformImage5,
+  platformImage6,
+];
 
 export const Platforms: FC<PlatformsProps> = ({
   windowSize,
@@ -39,7 +53,7 @@ export const Platforms: FC<PlatformsProps> = ({
 }) => {
   useExtend({ Sprite });
 
-  const [platformTexture, setPlatformTexture] = useState<Texture | null>(null);
+  const [platformTextures, setPlatformTextures] = useState<Texture[]>([]);
   const [platforms, setPlatforms] = useState<PlatformData[]>([]);
   const platformRefs = useRef<Map<number, SpriteType | null>>(new Map());
   const nextPlatformId = useRef(0);
@@ -55,12 +69,15 @@ export const Platforms: FC<PlatformsProps> = ({
       MIN_PLATFORM_DISTANCE;
     const x = startX + distance;
     const y = Math.floor(Math.random() * (MAX_PLATFORM_Y - MIN_PLATFORM_Y + 1)) + MIN_PLATFORM_Y;
+    // Случайно выбираем текстуру из доступных
+    const textureIndex = Math.floor(Math.random() * PLATFORM_IMAGES.length);
 
     return {
       id: nextPlatformId.current++,
       x,
       y,
       width,
+      textureIndex,
     };
   };
 
@@ -77,6 +94,7 @@ export const Platforms: FC<PlatformsProps> = ({
         x: firstPlatformX,
         y: HERO_GROUND_Y, // На уровне земли, где стоит герой
         width: firstPlatformWidth,
+        textureIndex: Math.floor(Math.random() * PLATFORM_IMAGES.length), // Случайная текстура для первой платформы
       };
       initialPlatforms.push(firstPlatform);
 
@@ -97,18 +115,20 @@ export const Platforms: FC<PlatformsProps> = ({
     }
   }, [platforms.length, platformsRef]);
 
-  // Загрузка текстуры платформы
+  // Загрузка всех текстур платформ
   useEffect(() => {
-    const loadPlatform = async () => {
+    const loadPlatformTextures = async () => {
       try {
-        const texture = await Assets.load(platformImage);
-        setPlatformTexture(texture);
+        const textures = await Promise.all(
+          PLATFORM_IMAGES.map((imagePath) => Assets.load(imagePath))
+        );
+        setPlatformTextures(textures);
       } catch (error) {
-        console.error('Failed to load platform texture:', error);
+        console.error('Failed to load platform textures:', error);
       }
     };
 
-    loadPlatform();
+    loadPlatformTextures();
   }, []);
 
   // Callback refs для сохранения ссылок на платформы
@@ -131,7 +151,7 @@ export const Platforms: FC<PlatformsProps> = ({
   useEffect(() => {
     const updatePlatforms = () => {
       const currentPlatforms = platforms;
-      if (currentPlatforms.length === 0 || !platformTexture) {
+      if (currentPlatforms.length === 0 || platformTextures.length === 0) {
         animationFrameRef.current = requestAnimationFrame(updatePlatforms);
         return;
       }
@@ -204,27 +224,33 @@ export const Platforms: FC<PlatformsProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [platformTexture, backgroundOffsetRef, windowSize.width, platforms, platformsRef]);
+  }, [platformTextures, backgroundOffsetRef, windowSize.width, platforms, platformsRef]);
 
-  if (!platformTexture || platforms.length === 0) {
+  if (platformTextures.length === 0 || platforms.length === 0) {
     return null;
   }
 
   return (
     <>
-      {platforms.map((platform) => (
-        <pixiSprite
-          key={platform.id}
-          ref={handlePlatformRef(platform.id)}
-          texture={platformTexture}
-          x={platform.x}
-          y={platform.y}
-          width={platform.width}
-          height={PLATFORM_HEIGHT}
-          anchor={{ x: 0, y: -1.4 }}
-          zIndex={1}
-        />
-      ))}
+      {platforms.map((platform) => {
+        // console.log('platform:', platform);
+        const texture = platformTextures[platform.textureIndex];
+        if (!texture) return null;
+
+        return (
+          <pixiSprite
+            key={platform.id}
+            ref={handlePlatformRef(platform.id)}
+            texture={texture}
+            x={platform.x}
+            y={platform.y}
+            width={platform.width}
+            height={PLATFORM_HEIGHT}
+            anchor={{ x: 0, y: -0.6 }}
+            zIndex={1}
+          />
+        );
+      })}
     </>
   );
 };
