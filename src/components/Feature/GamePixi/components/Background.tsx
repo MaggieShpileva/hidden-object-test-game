@@ -17,6 +17,7 @@ type BackgroundProps = {
   spriteXRef: React.MutableRefObject<number>;
   spriteSpeed: number;
   fixedPosition: number;
+  onBackgroundLoaded?: () => void;
 };
 
 export const Background: FC<BackgroundProps> = ({
@@ -26,6 +27,7 @@ export const Background: FC<BackgroundProps> = ({
   spriteXRef,
   spriteSpeed,
   fixedPosition,
+  onBackgroundLoaded,
 }) => {
   useExtend({ Sprite });
 
@@ -48,13 +50,21 @@ export const Background: FC<BackgroundProps> = ({
       try {
         const texture = await Assets.load(winterBgImage);
         setBackgroundTexture(texture);
+        // Уведомляем родительский компонент о загрузке фона
+        if (onBackgroundLoaded) {
+          onBackgroundLoaded();
+        }
       } catch (error) {
         console.error('Failed to load background:', error);
+        // Даже при ошибке уведомляем, чтобы лоадер не завис
+        if (onBackgroundLoaded) {
+          onBackgroundLoaded();
+        }
       }
     };
 
     loadBackground();
-  }, []);
+  }, [onBackgroundLoaded]);
 
   // Обновление размеров фонов при изменении размера окна
   useEffect(() => {

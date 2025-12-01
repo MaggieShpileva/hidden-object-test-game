@@ -50,6 +50,8 @@ export const GamePixi: FC = () => {
   const [gameKey, setGameKey] = useState(0); // Ключ для принудительного рестарта компонентов
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const musicStartedRef = useRef(false); // Флаг для отслеживания запуска музыки
+  const backgroundLoadedRef = useRef(false); // Флаг загрузки фона
+  const loadingStartTimeRef = useRef<number | null>(null); // Время начала загрузки
   const loadingTimeoutRef = useRef<number | null>(null);
 
   // Инициализация фоновой музыки
@@ -67,11 +69,38 @@ export const GamePixi: FC = () => {
     };
   }, []);
 
+  // Инициализация времени начала загрузки
   useEffect(() => {
-    loadingTimeoutRef.current = window.setTimeout(() => {
-      setIsLoading(false);
-    }, 2500);
+    loadingStartTimeRef.current = Date.now();
+  }, []);
 
+  // Обработка загрузки фона
+  const handleBackgroundLoaded = () => {
+    if (backgroundLoadedRef.current) {
+      // Фон уже загружен, игнорируем повторный вызов
+      return;
+    }
+
+    backgroundLoadedRef.current = true;
+    // Минимальное время показа лоадера для плавности (2.5 секунды)
+    const minLoadingTime = 2500;
+    const startTime = loadingStartTimeRef.current || Date.now();
+    const elapsed = Date.now() - startTime;
+
+    if (elapsed >= minLoadingTime) {
+      // Минимальное время уже прошло, скрываем лоадер сразу
+      setIsLoading(false);
+    } else {
+      // Если фон загружен, но прошло меньше минимального времени, ждем
+      const remainingTime = minLoadingTime - elapsed;
+      loadingTimeoutRef.current = window.setTimeout(() => {
+        setIsLoading(false);
+      }, remainingTime);
+    }
+  };
+
+  // Очистка таймера при размонтировании
+  useEffect(() => {
     return () => {
       if (loadingTimeoutRef.current !== null) {
         window.clearTimeout(loadingTimeoutRef.current);
@@ -119,6 +148,14 @@ export const GamePixi: FC = () => {
     platformsRef.current = [];
     giftsRef.current = [];
     collectedGiftsRef.current.clear();
+    backgroundLoadedRef.current = false; // Сбрасываем флаг загрузки фона
+    loadingStartTimeRef.current = Date.now(); // Сбрасываем время начала загрузки
+    setIsLoading(true); // Показываем лоадер при рестарте
+    // Очищаем предыдущий таймер
+    if (loadingTimeoutRef.current !== null) {
+      window.clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
     setGameKey((prev) => prev + 1); // Изменяем ключ для принудительного рестарта компонентов
     // Музыка автоматически возобновится через useEffect при изменении isGameOver
   };
@@ -143,6 +180,7 @@ export const GamePixi: FC = () => {
             spriteXRef={spriteXRef}
             spriteSpeed={SPRITE_SPEED}
             fixedPosition={windowSize.width * 0.4}
+            onBackgroundLoaded={handleBackgroundLoaded}
           />
           <Platforms
             windowSize={windowSize}
