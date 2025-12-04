@@ -18,41 +18,6 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          // ВАЖНО: React, React-DOM и React-Router должны быть в одном чанке
-          // Это критично для корректной работы React 19 в production
-          if (
-            id.includes('node_modules/react/') ||
-            id.includes('node_modules/react-dom/') ||
-            id.includes('node_modules/react-router')
-          ) {
-            return 'react-vendor';
-          }
-          // Выделяем Three.js и связанные библиотеки в отдельный чанк
-          if (id.includes('node_modules/three') || id.includes('node_modules/@react-three')) {
-            return 'three-vendor';
-          }
-          // Выделяем Pixi.js в отдельный чанк
-          if (id.includes('node_modules/pixi.js') || id.includes('node_modules/@pixi')) {
-            return 'pixi-vendor';
-          }
-          // Выделяем GSAP в отдельный чанк
-          if (id.includes('node_modules/gsap')) {
-            return 'gsap';
-          }
-          // Выделяем Lottie в отдельный чанк
-          if (id.includes('node_modules/lottie')) {
-            return 'lottie';
-          }
-          // Остальные node_modules в vendor чанк
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
-        },
-      },
-    },
     chunkSizeWarningLimit: 1000,
   },
 });

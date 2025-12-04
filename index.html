@@ -5,16 +5,30 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend-templates-react</title>
-    <!-- Отключаем React DevTools в production -->
+    <!-- Отключаем React DevTools в production для предотвращения ошибок -->
     <script>
-      if (typeof window !== 'undefined') {
-        // Удаляем React DevTools hook до загрузки React
-        Object.defineProperty(window, '__REACT_DEVTOOLS_GLOBAL_HOOK__', {
-          value: undefined,
-          writable: false,
-          configurable: true,
-        });
-      }
+      (function () {
+        if (typeof window !== 'undefined') {
+          try {
+            // Удаляем или переопределяем DevTools hook до загрузки React
+            if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+              window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = undefined;
+            }
+            // Создаем заглушку, чтобы предотвратить инициализацию DevTools
+            Object.defineProperty(window, '__REACT_DEVTOOLS_GLOBAL_HOOK__', {
+              get: function () {
+                return undefined;
+              },
+              set: function () {
+                // Игнорируем попытки установить hook
+              },
+              configurable: true,
+            });
+          } catch (e) {
+            // Игнорируем ошибки
+          }
+        }
+      })();
     </script>
   </head>
   <body>
