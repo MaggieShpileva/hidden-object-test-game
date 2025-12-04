@@ -59,7 +59,7 @@ const PlanetsGroup = () => {
   // Уменьшаем количество сегментов для оптимизации (было 32x32, стало 16x16)
   const geometries = useMemo(() => {
     return {
-      [SIZE_PLANET.SMALL]: new SphereGeometry(0.5, 16, 16),
+      [SIZE_PLANET.SMALL]: new SphereGeometry(1, 16, 16),
       [SIZE_PLANET.MEDIUM]: new SphereGeometry(2, 20, 20),
       [SIZE_PLANET.LARGE]: new SphereGeometry(4, 24, 24),
     };
