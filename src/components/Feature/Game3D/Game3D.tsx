@@ -23,7 +23,7 @@ const Game3D: FC = () => {
           enableRotate={true}
           panSpeed={1}
           zoomSpeed={1}
-          maxDistance={300}
+          maxDistance={500}
           rotateSpeed={0.5}
         />
         <directionalLight
@@ -107,28 +107,55 @@ const Planet = memo(
     const meshRef = useRef<Mesh>(null);
 
     // Начальная позиция на орбите (детерминированная на основе ID планеты)
+    // Используем более равномерное распределение для предотвращения наложений
     const orbitDataRef = useRef(
       (() => {
         // Используем ID планеты как seed для генерации детерминированных значений
-        const seed = planetId * 0.1;
-        const radius = Math.sin(seed) * 50 + 50 + 50; // Радиус орбиты от 50 до 150
-        const angleX = (Math.cos(seed) * Math.PI * 2) % (Math.PI * 2);
-        const angleY = (Math.sin(seed * 2) * Math.PI * 2) % (Math.PI * 2);
-        const speed = (Math.sin(seed * 3) * 0.5 + 0.1) * (Math.cos(seed) > 0 ? 1 : -1);
+        const seed = planetId;
+
+        // Равномерное распределение радиуса по слоям для предотвращения наложений
+        const radiusStep = 10; // Шаг между орбитами
+        const minRadius = 40; // Минимальный радиус
+        const radiusIndex = seed % 20; // Используем остаток для распределения по слоям
+        const radius = minRadius + radiusIndex * radiusStep + (seed % 30); // Добавляем небольшую вариацию
+
+        // Используем золотой угол для равномерного распределения по углам
+        // Золотой угол обеспечивает оптимальное распределение точек на сфере
+        const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399963229728653 радиан
+        const angleX = (seed * goldenAngle) % (Math.PI * 2);
+        const angleY = (seed * 0.7 + Math.PI / 4) % (Math.PI * 2);
+
+        // Скорость вращения с большим разнообразием
+        const speedBase = 0.1 + (seed % 10) * 0.05; // От 0.1 до 0.55
+        const speed = speedBase * (seed % 2 === 0 ? 1 : -1); // Чередуем направление
+
         return { radius, angleX, angleY, speed };
       })()
     );
 
-    // Анимация вращения вокруг центра
+    // Анимация вращения вокруг центра с фиксированным timestep для независимости от FPS
+    const fixedTimeStep = 1 / 60; // Фиксированный шаг времени (60 FPS)
+    const accumulatorRef = useRef(0);
+
     useFrame((_, delta) => {
       if (meshRef.current) {
         const orbitData = orbitDataRef.current;
-        orbitData.angleX += orbitData.speed * delta * 0.1;
-        orbitData.angleY += orbitData.speed * delta * 0.1;
 
-        // Вычисляем позицию на орбите
+        // Ограничиваем delta для предотвращения больших скачков при lag spikes
+        const clampedDelta = Math.min(delta, 0.1); // Максимум 100ms
+        accumulatorRef.current += clampedDelta;
+
+        // Обновляем физику с фиксированным шагом времени для стабильности
+        while (accumulatorRef.current >= fixedTimeStep) {
+          orbitData.angleX += orbitData.speed * fixedTimeStep * 0.1;
+          orbitData.angleY += orbitData.speed * fixedTimeStep * 0.05; // Медленнее по Y для эллиптической орбиты
+          accumulatorRef.current -= fixedTimeStep;
+        }
+
+        // Вычисляем позицию на орбите вокруг центра (0, 0, 0)
+        // Используем сферические координаты для круговой орбиты в 3D пространстве
         meshRef.current.position.x = Math.cos(orbitData.angleX) * orbitData.radius;
-        meshRef.current.position.y = Math.sin(orbitData.angleY) * orbitData.radius * 0.5;
+        meshRef.current.position.y = Math.sin(orbitData.angleY) * orbitData.radius * 0.3; // Вертикальная амплитуда
         meshRef.current.position.z = Math.sin(orbitData.angleX) * orbitData.radius;
       }
     });
