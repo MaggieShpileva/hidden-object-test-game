@@ -21,33 +21,38 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Выделяем React и React DOM в отдельный чанк
-          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+          // ВАЖНО: React, React-DOM и React-Router должны быть в одном чанке
+          // Это критично для корректной работы React 19 в production
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/react-router')
+          ) {
             return 'react-vendor';
           }
           // Выделяем Three.js и связанные библиотеки в отдельный чанк
-          if (id.includes('three') || id.includes('@react-three')) {
+          if (id.includes('node_modules/three') || id.includes('node_modules/@react-three')) {
             return 'three-vendor';
           }
           // Выделяем Pixi.js в отдельный чанк
-          if (id.includes('pixi.js') || id.includes('@pixi')) {
+          if (id.includes('node_modules/pixi.js') || id.includes('node_modules/@pixi')) {
             return 'pixi-vendor';
           }
           // Выделяем GSAP в отдельный чанк
-          if (id.includes('gsap')) {
+          if (id.includes('node_modules/gsap')) {
             return 'gsap';
           }
           // Выделяем Lottie в отдельный чанк
-          if (id.includes('lottie')) {
+          if (id.includes('node_modules/lottie')) {
             return 'lottie';
           }
-          // Выделяем node_modules в vendor чанк
+          // Остальные node_modules в vendor чанк
           if (id.includes('node_modules')) {
             return 'vendor';
           }
         },
       },
     },
-    chunkSizeWarningLimit: 1000, // Увеличиваем лимит до 1MB для предупреждений
+    chunkSizeWarningLimit: 1000,
   },
 });
