@@ -3,21 +3,35 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import { App } from './App.tsx';
 
-// Исправление для React DevTools и обработка ошибок в production
+// Отключаем React DevTools в production для предотвращения ошибок
+if (typeof window !== 'undefined' && import.meta.env.PROD) {
+  // Отключаем React DevTools
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const win = window as Window & { __REACT_DEVTOOLS_GLOBAL_HOOK__?: any };
+  if (win.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+    try {
+      win.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers?.clear();
+      win.__REACT_DEVTOOLS_GLOBAL_HOOK__ = undefined;
+      delete win.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    } catch {
+      // Игнорируем ошибки удаления
+    }
+  }
+}
+
+// Обработка ошибок в production
 if (typeof window !== 'undefined') {
   const originalErrorHandler = window.onerror;
   window.onerror = (message, source, lineno, colno, error) => {
-    // Игнорируем ошибку React DevTools о версионировании
-    if (typeof message === 'string' && message.includes('Invalid argument not valid semver')) {
-      return true;
-    }
-    // Игнорируем ошибку Activity в production (связана с React DevTools)
+    // Игнорируем ошибки, связанные с React DevTools
     if (
       typeof message === 'string' &&
-      (message.includes('Activity') || message.includes('Cannot set properties of undefined'))
+      (message.includes('Activity') ||
+        message.includes('Cannot set properties of undefined') ||
+        message.includes('Invalid argument not valid semver') ||
+        message.includes('__REACT_DEVTOOLS'))
     ) {
-      console.warn('React DevTools related error ignored:', message);
-      return true;
+      return true; // Подавляем ошибку
     }
     // Вызываем оригинальный обработчик для других ошибок
     if (originalErrorHandler) {
@@ -28,15 +42,16 @@ if (typeof window !== 'undefined') {
 
   // Обработка необработанных промисов
   window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason;
     if (
-      event.reason &&
-      typeof event.reason === 'object' &&
-      'message' in event.reason &&
-      typeof event.reason.message === 'string' &&
-      (event.reason.message.includes('Activity') ||
-        event.reason.message.includes('Cannot set properties of undefined'))
+      reason &&
+      typeof reason === 'object' &&
+      'message' in reason &&
+      typeof reason.message === 'string' &&
+      (reason.message.includes('Activity') ||
+        reason.message.includes('Cannot set properties of undefined') ||
+        reason.message.includes('__REACT_DEVTOOLS'))
     ) {
-      console.warn('React DevTools related promise rejection ignored:', event.reason);
       event.preventDefault();
     }
   });
@@ -47,8 +62,28 @@ if (!rootElement) {
   throw new Error('Root element not found');
 }
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+// Безопасная инициализация React с обработкой ошибок
+try {
+  const root = createRoot(rootElement);
+  root.render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+} catch (error) {
+  // Если произошла ошибка при инициализации, пробуем без StrictMode
+  console.warn('Error during React initialization, retrying without StrictMode:', error);
+  try {
+    const root = createRoot(rootElement);
+    root.render(<App />);
+  } catch (retryError) {
+    console.error('Failed to initialize React:', retryError);
+    rootElement.innerHTML = `
+      <div style="padding: 20px; text-align: center;">
+        <h1>Application Error</h1>
+        <p>Failed to initialize the application. Please refresh the page.</p>
+        <button onclick="window.location.reload()">Reload Page</button>
+      </div>
+    `;
+  }
+}

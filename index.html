@@ -5,6 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend-templates-react</title>
+    <!-- Отключаем React DevTools в production -->
+    <script>
+      if (typeof window !== 'undefined') {
+        // Удаляем React DevTools hook до загрузки React
+        Object.defineProperty(window, '__REACT_DEVTOOLS_GLOBAL_HOOK__', {
+          value: undefined,
+          writable: false,
+          configurable: true,
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
