@@ -1,0 +1,26 @@
+.game3d {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  background: url('@assets/galaxy.jpg') no-repeat center center;
+  background-size: cover;
+
+  // Затемняющий слой поверх фона, но под Canvas
+  &::before {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    background-color: rgba(0, 0, 0, 0.6); // Затемнение (0.6 = 60% черного)
+    content: '';
+    pointer-events: none; // Позволяет взаимодействовать с Canvas поверх слоя
+  }
+
+  // Canvas должен быть поверх затемняющего слоя
+  canvas {
+    position: relative;
+    z-index: 1;
+  }
+}

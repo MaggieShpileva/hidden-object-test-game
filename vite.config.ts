@@ -20,13 +20,31 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks: (id) => {
           // Выделяем React и React DOM в отдельный чанк
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            return 'react-vendor';
+          }
+          // Выделяем Three.js и связанные библиотеки в отдельный чанк
+          if (id.includes('three') || id.includes('@react-three')) {
+            return 'three-vendor';
+          }
+          // Выделяем Pixi.js в отдельный чанк
+          if (id.includes('pixi.js') || id.includes('@pixi')) {
+            return 'pixi-vendor';
+          }
           // Выделяем GSAP в отдельный чанк
-          gsap: ['gsap'],
+          if (id.includes('gsap')) {
+            return 'gsap';
+          }
           // Выделяем Lottie в отдельный чанк
-          lottie: ['lottie-react'],
+          if (id.includes('lottie')) {
+            return 'lottie';
+          }
+          // Выделяем node_modules в vendor чанк
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         },
       },
     },

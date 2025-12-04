@@ -6,3 +6,4 @@ export { Layout } from './Layout';
 export { Error } from './Error';
 export { Game } from './Game';
 export { GamePixi } from './GamePixi';
+export { Game3D } from './Game3D';

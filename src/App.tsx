@@ -3,7 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
 import { Error } from './pages/Error';
-import { Game, GamePixi, Layout } from './components/Feature';
+import { Game, GamePixi, Game3D, Layout } from './components/Feature';
 
 const router = createBrowserRouter([
   {
@@ -22,6 +22,10 @@ const router = createBrowserRouter([
       {
         path: '/game-pixi',
         element: <GamePixi />,
+      },
+      {
+        path: '/game-3d',
+        element: <Game3D />,
       },
       {
         path: '*',
