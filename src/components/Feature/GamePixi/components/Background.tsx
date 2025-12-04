@@ -86,8 +86,19 @@ export const Background: FC<BackgroundProps> = ({
 
   // Обновление позиций фонов в игровом цикле
   useEffect(() => {
+    let lastTime = performance.now();
+    const targetFPS = 60; // Целевой FPS
+    const frameTime = 1000 / targetFPS; // Время одного кадра в миллисекундах
+
     const updateBackground = () => {
       if (backgroundRef1.current && backgroundRef2.current) {
+        const currentTime = performance.now();
+        const deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        // Нормализуем delta time относительно целевого FPS
+        const normalizedDelta = Math.min(deltaTime / frameTime, 2);
+
         // Проверяем, нужно ли двигать фон
         const shouldMoveBackground =
           pressedKeysRef.current.has('ArrowRight') && spriteXRef.current >= fixedPosition;
@@ -95,7 +106,7 @@ export const Background: FC<BackgroundProps> = ({
         // Двигаем фон если герой зафиксирован и движется вправо
         // Скорость фона должна быть равна скорости героя для синхронизации
         if (shouldMoveBackground) {
-          backgroundOffsetRef.current -= spriteSpeed;
+          backgroundOffsetRef.current -= spriteSpeed * normalizedDelta;
         }
 
         // Используем реальную ширину фона с учетом пропорций

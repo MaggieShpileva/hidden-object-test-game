@@ -14,9 +14,10 @@ import magicSound1Url from '@assets/sounds/magic-1.mp3';
 import magicSound2Url from '@assets/sounds/magic-2.mp3';
 
 const SPRITE_SCALE = 0.3;
-const SPRITE_SPEED = 5;
-const JUMP_POWER = 20;
-const GRAVITY = 0.8;
+// Константы рассчитаны на 60 FPS, автоматически масштабируются для других FPS через delta time
+const SPRITE_SPEED = 5; // Пикселей за кадр при 60 FPS
+const JUMP_POWER = 20; // Мгновенная скорость прыжка (не зависит от FPS)
+const GRAVITY = 0.8; // Ускорение за кадр при 60 FPS
 const GROUND_Y = 400;
 const HERO_WIDTH = 50; // Примерная ширина героя (можно настроить)
 const HERO_HEIGHT = 80; // Примерная высота героя (можно настроить)
@@ -370,12 +371,24 @@ export const Hero: FC<HeroProps> = ({
 
   // Физика и игровой цикл
   useEffect(() => {
-    const updatePhysics = () => {
-      // Применяем гравитацию
-      velocityYRef.current += GRAVITY;
+    let lastTime = performance.now();
+    const targetFPS = 60; // Целевой FPS
+    const frameTime = 1000 / targetFPS; // Время одного кадра в миллисекундах (16.67ms для 60 FPS)
 
-      // Обновляем позицию Y
-      spriteYRef.current += velocityYRef.current;
+    const updatePhysics = () => {
+      const currentTime = performance.now();
+      const deltaTime = currentTime - lastTime;
+      lastTime = currentTime;
+
+      // Нормализуем delta time относительно целевого FPS
+      // Если deltaTime больше frameTime, ограничиваем для предотвращения больших скачков
+      const normalizedDelta = Math.min(deltaTime / frameTime, 2); // Ограничиваем максимум 2x для стабильности
+
+      // Применяем гравитацию с учетом delta time
+      velocityYRef.current += GRAVITY * normalizedDelta;
+
+      // Обновляем позицию Y с учетом delta time
+      spriteYRef.current += velocityYRef.current * normalizedDelta;
 
       // Проверяем коллизию с платформами
       const collision = checkPlatformCollision(
@@ -410,9 +423,9 @@ export const Hero: FC<HeroProps> = ({
 
       const fixedPosition = windowSize.width * 0.4;
 
-      // Непрерывное движение по X при удержании клавиш
+      // Непрерывное движение по X при удержании клавиш с учетом delta time
       if (pressedKeysRef.current.has('ArrowLeft')) {
-        const newX = spriteXRef.current - SPRITE_SPEED;
+        const newX = spriteXRef.current - SPRITE_SPEED * normalizedDelta;
         // Если герой был зафиксирован и движется назад, разрешаем движение
         if (newX < fixedPosition) {
           spriteXRef.current = Math.max(0, newX);
@@ -420,7 +433,7 @@ export const Hero: FC<HeroProps> = ({
         }
       }
       if (pressedKeysRef.current.has('ArrowRight')) {
-        const newX = spriteXRef.current + SPRITE_SPEED;
+        const newX = spriteXRef.current + SPRITE_SPEED * normalizedDelta;
         // Если достигли 40% ширины, фиксируем позицию
         if (newX >= fixedPosition) {
           spriteXRef.current = fixedPosition;
