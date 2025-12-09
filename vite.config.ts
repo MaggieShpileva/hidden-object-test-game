@@ -17,6 +17,9 @@ export default defineConfig({
       '@types': path.resolve(__dirname, './src/types'),
     },
   },
+  server: {
+    host: true, // Открывает доступ из сети (0.0.0.0)
+  },
   build: {
     chunkSizeWarningLimit: 1000,
   },
