@@ -26,14 +26,13 @@ body {
   width: 100%;
   min-width: 320px;
   min-height: 100vh;
-
-  /* overflow: hidden; */
+  overflow: hidden;
 }
 
 /* Overflow hidden только на странице с птицей */
 html.scroll-page-overflow-hidden,
 body.scroll-page-overflow-hidden {
-  /* overflow: visible; */
+  overflow: visible;
 }
 
 h1 {
