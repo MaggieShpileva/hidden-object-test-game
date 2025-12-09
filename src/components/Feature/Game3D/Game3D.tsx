@@ -1,8 +1,15 @@
-import { Suspense, useMemo, memo, useRef, type FC } from 'react';
+import { Suspense, useMemo, useRef, useEffect, type FC } from 'react';
 import styles from './Game3D.module.scss';
 import { Canvas, useLoader, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { TextureLoader, SphereGeometry, MeshStandardMaterial, Mesh } from 'three';
+import {
+  TextureLoader,
+  SphereGeometry,
+  MeshStandardMaterial,
+  InstancedMesh,
+  Color,
+  Matrix4,
+} from 'three';
 import Texture_Planet from '@assets/texture.webp';
 import Texture_Planet_2 from '@assets/texture-2.jpg';
 import { PLANETS, type Planet, SIZE_PLANET } from '@/mock/planets';
@@ -23,7 +30,6 @@ const Game3D: FC = () => {
           enableRotate={true}
           panSpeed={1}
           zoomSpeed={1}
-          maxDistance={500}
           rotateSpeed={0.5}
         />
         <directionalLight
@@ -56,7 +62,6 @@ const PlanetsGroup = () => {
   const textures = useLoader(TextureLoader, [Texture_Planet, Texture_Planet_2]);
 
   // Создаем геометрии один раз для каждого размера
-  // Уменьшаем количество сегментов для оптимизации (было 32x32, стало 16x16)
   const geometries = useMemo(() => {
     return {
       [SIZE_PLANET.SMALL]: new SphereGeometry(1, 16, 16),
@@ -65,112 +70,158 @@ const PlanetsGroup = () => {
     };
   }, []);
 
-  // Создаем материалы для каждой планеты с детерминированным выбором текстуры
-  const planetMaterials = useMemo(() => {
-    return PLANETS.map((planet) => {
-      // Детерминированный выбор текстуры на основе ID планеты
-      const textureIndex = planet.id % textures.length;
-      const selectedTexture = textures[textureIndex];
-      return new MeshStandardMaterial({
-        map: selectedTexture,
-        color: planet.color,
+  // Группируем планеты по размерам
+  const planetsBySize = useMemo(() => {
+    const grouped: Record<string, Planet[]> = {
+      [SIZE_PLANET.SMALL]: [],
+      [SIZE_PLANET.MEDIUM]: [],
+      [SIZE_PLANET.LARGE]: [],
+    };
+    PLANETS.forEach((planet) => {
+      grouped[planet.size].push(planet);
+    });
+    return grouped;
+  }, []);
+
+  // Создаем базовые материалы для каждого размера (с текстурами)
+  const baseMaterials = useMemo(() => {
+    return {
+      [SIZE_PLANET.SMALL]: new MeshStandardMaterial({
+        map: textures[0],
         roughness: 0.9,
         metalness: 0.2,
-      });
-    });
+      }),
+      [SIZE_PLANET.MEDIUM]: new MeshStandardMaterial({
+        map: textures[1],
+        roughness: 0.9,
+        metalness: 0.2,
+      }),
+      [SIZE_PLANET.LARGE]: new MeshStandardMaterial({
+        map: textures[0],
+        roughness: 0.9,
+        metalness: 0.2,
+      }),
+    };
   }, [textures]);
 
   return (
     <>
-      {PLANETS.map((planet, index) => (
-        <Planet
-          key={planet.id}
-          planetId={planet.id}
-          geometry={geometries[planet.size]}
-          material={planetMaterials[index]}
-        />
-      ))}
+      {(Object.keys(SIZE_PLANET) as Array<keyof typeof SIZE_PLANET>).map((sizeKey) => {
+        const size = SIZE_PLANET[sizeKey];
+        const planets = planetsBySize[size];
+        if (planets.length === 0) return null;
+
+        return (
+          <PlanetsInstancedMesh
+            key={size}
+            planets={planets}
+            geometry={geometries[size]}
+            material={baseMaterials[size]}
+          />
+        );
+      })}
     </>
   );
 };
 
-const Planet = memo(
-  ({
-    planetId,
-    geometry,
-    material,
-  }: {
-    planetId: number;
-    geometry: SphereGeometry;
-    material: MeshStandardMaterial;
-  }) => {
-    const meshRef = useRef<Mesh>(null);
+// Компонент для InstancedMesh планет одного размера
+const PlanetsInstancedMesh = ({
+  planets,
+  geometry,
+  material,
+}: {
+  planets: Planet[];
+  geometry: SphereGeometry;
+  material: MeshStandardMaterial;
+}) => {
+  const instancedMeshRef = useRef<InstancedMesh>(null);
+  const matrix = useMemo(() => new Matrix4(), []);
+  const tempColor = useMemo(() => new Color(), []);
 
-    // Начальная позиция на орбите (детерминированная на основе ID планеты)
-    // Используем более равномерное распределение для предотвращения наложений
-    const orbitDataRef = useRef(
-      (() => {
-        // Используем ID планеты как seed для генерации детерминированных значений
-        const seed = planetId;
+  // Инициализация данных орбит для каждой планеты
+  const orbitDataRef = useRef(
+    planets.map((planet) => {
+      const seed = planet.id;
+      const radiusStep = 10;
+      const minRadius = 40;
+      const radiusIndex = seed % 20;
+      const radius = minRadius + radiusIndex * radiusStep + (seed % 30);
 
-        // Равномерное распределение радиуса по слоям для предотвращения наложений
-        const radiusStep = 10; // Шаг между орбитами
-        const minRadius = 40; // Минимальный радиус
-        const radiusIndex = seed % 20; // Используем остаток для распределения по слоям
-        const radius = minRadius + radiusIndex * radiusStep + (seed % 30); // Добавляем небольшую вариацию
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      const angleX = (seed * goldenAngle) % (Math.PI * 2);
+      const angleY = (seed * 0.7 + Math.PI / 4) % (Math.PI * 2);
 
-        // Используем золотой угол для равномерного распределения по углам
-        // Золотой угол обеспечивает оптимальное распределение точек на сфере
-        const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399963229728653 радиан
-        const angleX = (seed * goldenAngle) % (Math.PI * 2);
-        const angleY = (seed * 0.7 + Math.PI / 4) % (Math.PI * 2);
+      const speedBase = 0.1 + (seed % 10) * 0.05;
+      const speed = speedBase * (seed % 2 === 0 ? 1 : -1);
 
-        // Скорость вращения с большим разнообразием
-        const speedBase = 0.1 + (seed % 10) * 0.05; // От 0.1 до 0.55
-        const speed = speedBase * (seed % 2 === 0 ? 1 : -1); // Чередуем направление
+      return { radius, angleX, angleY, speed, color: planet.color };
+    })
+  );
 
-        return { radius, angleX, angleY, speed };
-      })()
-    );
+  // Инициализация матриц и цветов
+  useEffect(() => {
+    if (!instancedMeshRef.current) return;
 
-    // Анимация вращения вокруг центра с фиксированным timestep для независимости от FPS
-    const fixedTimeStep = 1 / 60; // Фиксированный шаг времени (60 FPS)
-    const accumulatorRef = useRef(0);
+    const orbitData = orbitDataRef.current;
+    orbitData.forEach((data, index) => {
+      // Устанавливаем начальную позицию
+      const x = Math.cos(data.angleX) * data.radius;
+      const y = Math.sin(data.angleY) * data.radius * 0.3;
+      const z = Math.sin(data.angleX) * data.radius;
 
-    useFrame((_, delta) => {
-      if (meshRef.current) {
-        const orbitData = orbitDataRef.current;
+      matrix.setPosition(x, y, z);
+      instancedMeshRef.current!.setMatrixAt(index, matrix);
 
-        // Ограничиваем delta для предотвращения больших скачков при lag spikes
-        const clampedDelta = Math.min(delta, 0.1); // Максимум 100ms
-        accumulatorRef.current += clampedDelta;
-
-        // Обновляем физику с фиксированным шагом времени для стабильности
-        while (accumulatorRef.current >= fixedTimeStep) {
-          orbitData.angleX += orbitData.speed * fixedTimeStep * 0.1;
-          orbitData.angleY += orbitData.speed * fixedTimeStep * 0.05; // Медленнее по Y для эллиптической орбиты
-          accumulatorRef.current -= fixedTimeStep;
-        }
-
-        // Вычисляем позицию на орбите вокруг центра (0, 0, 0)
-        // Используем сферические координаты для круговой орбиты в 3D пространстве
-        meshRef.current.position.x = Math.cos(orbitData.angleX) * orbitData.radius;
-        meshRef.current.position.y = Math.sin(orbitData.angleY) * orbitData.radius * 0.3; // Вертикальная амплитуда
-        meshRef.current.position.z = Math.sin(orbitData.angleX) * orbitData.radius;
-      }
+      // Устанавливаем цвет для каждого инстанса
+      tempColor.set(data.color);
+      instancedMeshRef.current!.setColorAt(index, tempColor);
     });
 
-    return (
-      <mesh
-        ref={meshRef}
-        geometry={geometry}
-        material={material}
-        castShadow
-        receiveShadow
-        frustumCulled
-      />
-    );
-  }
-);
+    instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+    if (instancedMeshRef.current.instanceColor) {
+      instancedMeshRef.current.instanceColor.needsUpdate = true;
+    }
+  }, [matrix, tempColor]);
 
-Planet.displayName = 'Planet';
+  // Анимация вращения
+  const fixedTimeStep = 1 / 60;
+  const accumulatorRef = useRef(0);
+
+  useFrame((_, delta) => {
+    if (!instancedMeshRef.current) return;
+
+    const orbitData = orbitDataRef.current;
+    const clampedDelta = Math.min(delta, 0.1);
+    accumulatorRef.current += clampedDelta;
+
+    while (accumulatorRef.current >= fixedTimeStep) {
+      orbitData.forEach((data) => {
+        data.angleX += data.speed * fixedTimeStep * 0.1;
+        data.angleY += data.speed * fixedTimeStep * 0.05;
+      });
+      accumulatorRef.current -= fixedTimeStep;
+    }
+
+    // Обновляем позиции всех инстансов
+    orbitData.forEach((data, index) => {
+      const x = Math.cos(data.angleX) * data.radius;
+      const y = Math.sin(data.angleY) * data.radius * 0.3;
+      const z = Math.sin(data.angleX) * data.radius;
+
+      matrix.setPosition(x, y, z);
+      instancedMeshRef.current!.setMatrixAt(index, matrix);
+    });
+
+    instancedMeshRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh
+      ref={instancedMeshRef}
+      args={[geometry, material, planets.length]}
+      castShadow
+      receiveShadow
+      frustumCulled
+    />
+  );
+};

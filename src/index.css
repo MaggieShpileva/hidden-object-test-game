@@ -29,6 +29,12 @@ body {
   overflow: hidden;
 }
 
+/* Overflow hidden только на странице с птицей */
+html.scroll-page-overflow-hidden,
+body.scroll-page-overflow-hidden {
+  overflow: visible;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;

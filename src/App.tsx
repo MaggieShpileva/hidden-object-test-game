@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
 import { Error } from './pages/Error';
+import { Scroll } from './pages/Scroll';
 import { Game, GamePixi, Game3D, Layout } from './components/Feature';
 
 const router = createBrowserRouter([
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
       {
         path: '/game-3d',
         element: <Game3D />,
+      },
+      {
+        path: '/bird',
+        element: <Scroll />,
       },
       {
         path: '*',

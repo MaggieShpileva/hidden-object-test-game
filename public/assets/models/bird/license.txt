@@ -1,0 +1,8 @@
+Model Information:
+* title:	银耳相思鸟
+* source:	https://sketchfab.com/3d-models/88ed1d3228c14c01ab5078c960d01228
+* author:	Gishere (https://sketchfab.com/Gishere)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works

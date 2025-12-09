@@ -1,0 +1,91 @@
+@use '@styles/index.scss' as *;
+
+.canvas {
+  width: 100dvw;
+  height: 100dvh;
+  position: fixed;
+  z-index: 1;
+  inset: 0;
+
+  canvas {
+    overscroll-behavior: contain;
+    touch-action: pan-y pinch-zoom;
+  }
+}
+
+.scrollBody {
+  padding: 0 20px;
+  max-width: 1920px;
+  height: 3000px;
+  background: linear-gradient(to bottom, #000, #17135b);
+}
+
+.banner {
+  height: 100dvh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+
+  .bannerText {
+    width: 80%;
+    position: absolute;
+    top: 10%;
+    right: 0;
+  }
+
+  .bannerBg {
+    // margin-top: 30%;
+    width: 100%;
+  }
+}
+
+.map {
+  margin: 40px auto;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  .title {
+    max-width: 600px;
+    text-align: center;
+
+    @include desktop-sm {
+      font-family: 64px;
+      font-weight: $font-weight-bold;
+    }
+  }
+
+  img {
+    width: 100%;
+    object-fit: cover;
+  }
+}
+
+.feature {
+  margin: 40px auto;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .title {
+    max-width: 600px;
+    text-align: center;
+  }
+
+  img {
+    margin: 30px;
+    width: 100dvw;
+    filter: brightness(0.8);
+  }
+}
+
+.titleFeature {
+  margin: 40px auto;
+  width: 80%;
+  text-align: center;
+}
