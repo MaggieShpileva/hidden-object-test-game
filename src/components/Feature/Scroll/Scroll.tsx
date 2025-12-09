@@ -4,7 +4,9 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import Bird from '@assets/models/bird/Scene.jsx';
 import { Title } from '@/components/UI';
-
+import PNG_Map from '@assets/map.png';
+import PNG_Bg from '@assets/bg.png';
+import SVG_ScrollPageBanner from '@assets/scroll-page-banner.svg';
 // Базовая ширина экрана для нормализации позиций (1920px - стандарт для десктопа)
 const BASE_WIDTH = 1920;
 
@@ -156,17 +158,13 @@ export const Scroll: FC = () => {
       </div>
       <div className={styles.scrollBody}>
         <section className={styles.banner}>
-          <img
-            src={'/src/assets/scroll-page-banner.svg'}
-            alt="Banner text"
-            className={styles.bannerText}
-          />
+          <img src={SVG_ScrollPageBanner} alt="Banner text" className={styles.bannerText} />
         </section>
         <section className={styles.map}>
           <Title tag="h2" className={styles.title}>
             Track friends around you and invite them to play together in the same world{' '}
           </Title>
-          <img src={'/src/assets/map.png'} alt="Map" />
+          <img src={PNG_Map} alt="Map" />
         </section>
         <section className={styles.features}>
           <div className={styles.feature}>
@@ -175,7 +173,7 @@ export const Scroll: FC = () => {
               fugit fuga, minima sapiente maxime inventore nostrum facere totam unde natus similique
               porro. Asperiores, quisquam dicta! Architecto, possimus.
             </Title>
-            <img src={'/src/assets/bg.png'} alt="Feature 1" />
+            <img src={PNG_Bg} alt="Feature 1" />
           </div>
         </section>
       </div>
