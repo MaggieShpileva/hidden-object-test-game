@@ -1,0 +1,344 @@
+@use '@styles/index.scss' as *;
+
+.feed {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+
+.videosContainer {
+  width: 100%;
+  height: 100%;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+
+  // Скрываем scrollbar
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.videoWrapper {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.videoItem {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  border: none;
+  object-fit: cover;
+}
+
+.videoInfo {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.videoTime {
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: $font-size-sm;
+  backdrop-filter: blur(10px);
+  font-weight: $font-weight-medium;
+}
+
+.activeIndicator {
+  width: 60px;
+  height: 60px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 2s infinite;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.4;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+}
+
+.buttonContainer {
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.videoModalButton {
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    outline: none;
+  }
+}
+
+.videoModal {
+  width: 100%;
+  height: 100dvh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.8);
+  transition:
+    opacity $transition-base ease-in-out,
+    visibility $transition-base ease-in-out;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+
+  &.modalOpen {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  &.modalClose {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.modalContent {
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  position: relative;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-lg;
+  transition: transform $transition-base ease-in-out;
+  transform: scale(0.9) translateY(20px);
+  overflow: hidden;
+
+  .modalOpen & {
+    transform: scale(1) translateY(0);
+  }
+
+  .modalClose & {
+    transform: scale(0.9) translateY(20px);
+  }
+}
+
+.closeButton {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  background: transparent;
+  color: $text-primary;
+  font-size: 28px;
+  line-height: 1;
+  transition: transform $transition-base ease-in-out;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+
+  &:hover {
+    transform: rotate(90deg);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    outline: none;
+  }
+}
+
+.modalBody {
+  padding: 0;
+  width: 100%;
+  height: calc(80vh - 80px);
+  max-height: calc(80vh - 80px);
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-x;
+  user-select: none;
+
+  &.transitioning {
+    transition: transform $transition-base ease-in-out;
+  }
+}
+
+.videoContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
+
+.modalVideoItem {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  transition:
+    opacity $transition-base ease-in-out,
+    transform $transition-base ease-in-out;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+
+  &.videoActive {
+    z-index: 1;
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.progressIndicator {
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: #899ff8;
+  transition: width 0.1s linear;
+  will-change: width;
+}
+
+.modalVideo {
+  width: 100%;
+  height: 100%;
+  border: none;
+  object-fit: cover;
+  pointer-events: none;
+  touch-action: none;
+}
+
+.modalVideoInfo {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modalVideoTime {
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: $font-size-sm;
+  backdrop-filter: blur(10px);
+  font-weight: $font-weight-medium;
+}
+
+.videoIndicators {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.modalTitle {
+  margin: 0 0 $spacing-md;
+  color: $text-primary;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+}
+
+.modalText {
+  margin: 0;
+  color: $text-secondary;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+}
+
+.indicator {
+  width: 100%;
+  height: 2px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  background: green;
+}

@@ -4,6 +4,7 @@ import { Home } from './pages/Home';
 import { NotFound } from './pages/NotFound';
 import { Error } from './pages/Error';
 import { Scroll } from './pages/Scroll';
+import { Feed } from './pages/Feed';
 import { Game, GamePixi, Game3D, Layout } from './components/Feature';
 
 const router = createBrowserRouter([
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
       {
         path: '/bird',
         element: <Scroll />,
+      },
+      {
+        path: '/feed',
+        element: <Feed />,
       },
       {
         path: '*',

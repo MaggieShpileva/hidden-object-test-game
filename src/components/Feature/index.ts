@@ -8,3 +8,4 @@ export { Game } from './Game';
 export { GamePixi } from './GamePixi';
 export { Game3D } from './Game3D';
 export { Scroll } from './Scroll';
+export { Feed } from './Feed';
